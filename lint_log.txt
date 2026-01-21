@@ -1,0 +1,78 @@
+﻿
+> routine-manager@0.1.0 lint
+> eslint
+
+
+C:\Users\User\routine\routine-manager\src\app\grid-design-options\components\NeonGrid.tsx
+   5:20  warning  'Cpu' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  11:27  error    Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\User\routine\routine-manager\src\app\grid-design-options\components\NeonGrid.tsx:11:27
+   9 |         id: i,
+  10 |         label: `SYS.CORE.${String(i + 1).padStart(3, '0')}`,
+> 11 |         power: Math.floor(Math.random() * 100),
+     |                           ^^^^^^^^^^^^^ Cannot call impure function
+  12 |     }))
+  13 |
+  14 |     return (  react-hooks/purity
+
+C:\Users\User\routine\routine-manager\src\components\ui\input.tsx
+  6:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\User\routine\routine-manager\src\components\ui\textarea.tsx
+  6:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\User\routine\routine-manager\src\hooks\useRoutines.ts
+   18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\User\routine\routine-manager\src\hooks\useRoutines.ts:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     refresh()
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, [refresh])
+  20 |
+  21 |   const createGoal = useCallback(                                                       react-hooks/set-state-in-effect
+   75:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\User\routine\routine-manager\src\hooks\useRoutines.ts:75:5
+  73 |
+  74 |   useEffect(() => {
+> 75 |     refresh()
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  76 |   }, [refresh])
+  77 |
+  78 |   const createRoutine = useCallback(                                                    react-hooks/set-state-in-effect
+  119:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\User\routine\routine-manager\src\hooks\useRoutines.ts:119:5
+  117 |   useEffect(() => {
+  118 |     const data = storage.getRoutineById(id)
+> 119 |     setRoutine(data || null)
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  120 |     setLoading(false)
+  121 |   }, [id])
+  122 |  react-hooks/set-state-in-effect
+
+笨・7 problems (6 errors, 1 warning)
+
