@@ -25,6 +25,7 @@ import {
   Lightbulb,
   Wand2,
   Zap,
+  Calendar,
 } from 'lucide-react'
 import { useRoutine, useGoals, useRoutines, useCategories } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
@@ -35,7 +36,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { IntegrationPanel } from '@/components/editor'
 import { SourcesPanel } from '@/components/resources'
-import type { ResourceSource } from '@/types'
+import { ScheduleConfigDialog } from '@/components/schedule/ScheduleConfigDialog'
+import type { ResourceSource, RoutineSchedule } from '@/types'
 import { cn } from '@/lib/utils'
 import { generateId } from '@/lib/utils'
 
@@ -73,6 +75,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
   const [content, setContent] = useState('')
   const [sources, setSources] = useState<ResourceSource[]>([])
   const [isIntegrationOpen, setIsIntegrationOpen] = useState(false)
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
@@ -222,6 +225,10 @@ export default function RoutineEditorPage({ params }: PageProps) {
     handleSave()
   }
 
+  const handleScheduleSave = (schedule: RoutineSchedule) => {
+    updateRoutine({ schedule })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -294,6 +301,20 @@ export default function RoutineEditorPage({ params }: PageProps) {
             >
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">{t('button.settings')}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsScheduleOpen(true)}
+              className={cn(
+                "gap-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg",
+                routine.schedule?.enabled
+                  ? "text-primary"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('nav.schedule')}</span>
             </Button>
             <Button
               size="sm"
@@ -513,6 +534,14 @@ export default function RoutineEditorPage({ params }: PageProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* Schedule Config Dialog */}
+      <ScheduleConfigDialog
+        open={isScheduleOpen}
+        onOpenChange={setIsScheduleOpen}
+        schedule={routine.schedule}
+        onSave={handleScheduleSave}
+      />
     </div>
   )
 }

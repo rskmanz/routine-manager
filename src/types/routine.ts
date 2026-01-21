@@ -83,6 +83,37 @@ export interface RoutineIntegration {
 // Routine status
 export type RoutineStatus = 'draft' | 'active' | 'paused'
 
+// Schedule types for recurring routines
+export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly'
+
+export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+
+export interface RoutineSchedule {
+  frequency: ScheduleFrequency
+  enabled: boolean
+  daysOfWeek?: DayOfWeek[]  // For weekly frequency
+  dayOfMonth?: number        // For monthly frequency (1-31)
+  reminderTime?: string      // Optional reminder time "09:00"
+}
+
+// Completion tracking
+export interface CompletionRecord {
+  id: string
+  routineId: string
+  scheduledDate: string  // ISO date "YYYY-MM-DD"
+  completedAt?: string   // ISO datetime when completed
+  status: 'pending' | 'completed' | 'skipped'
+  notes?: string
+}
+
+// Streak information (computed)
+export interface StreakInfo {
+  currentStreak: number
+  longestStreak: number
+  lastCompletedDate?: string
+  totalCompletions: number
+}
+
 // Main Routine interface
 export interface Routine {
   id: string
@@ -91,6 +122,7 @@ export interface Routine {
   blocks: ContentBlock[]
   sources?: ResourceSource[]  // NotebookLM-style sources
   integration: RoutineIntegration
+  schedule?: RoutineSchedule  // Recurring schedule for completion tracking
   status: RoutineStatus
   createdAt: string
   updatedAt: string
@@ -120,8 +152,12 @@ export interface StorageData {
   categories: Category[]
   goals: Goal[]
   routines: Routine[]
+  completions: CompletionRecord[]  // Completion tracking records
   version: string
 }
+
+// Navigation view types
+export type ViewType = 'list' | 'schedule' | 'editor'
 
 // API Response types
 export interface ApiResponse<T> {

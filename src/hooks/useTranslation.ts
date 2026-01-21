@@ -91,6 +91,37 @@ const translations = {
     // Dialogs
     'dialog.addUrl': 'Add URL',
     'dialog.pasteText': 'Paste Text',
+
+    // Navigation
+    'nav.list': 'List',
+    'nav.schedule': 'Schedule',
+    'nav.editor': 'Editor',
+
+    // Schedule View
+    'schedule.title': 'Schedule & Progress',
+    'schedule.today': 'Today',
+    'schedule.thisWeek': 'This Week',
+    'schedule.thisMonth': 'This Month',
+    'schedule.todayRoutines': "Today's Routines",
+    'schedule.completed': 'completed',
+    'schedule.noRoutines': 'No scheduled routines',
+    'schedule.noRoutinesDesc': 'Add a schedule to your routines to track them here.',
+    'schedule.streak': 'day streak',
+    'schedule.skip': 'Skip',
+    'schedule.markComplete': 'Mark complete',
+    'schedule.upcoming': 'Upcoming',
+    'schedule.weekOverview': 'Week Overview',
+
+    // Schedule Config
+    'scheduleConfig.title': 'Schedule Settings',
+    'scheduleConfig.frequency': 'Frequency',
+    'scheduleConfig.daily': 'Daily',
+    'scheduleConfig.weekly': 'Weekly',
+    'scheduleConfig.monthly': 'Monthly',
+    'scheduleConfig.daysOfWeek': 'Days of week',
+    'scheduleConfig.dayOfMonth': 'Day of month',
+    'scheduleConfig.reminderTime': 'Reminder time',
+    'scheduleConfig.enabled': 'Enable schedule',
   },
   ja: {
     // Home page
@@ -176,6 +207,37 @@ const translations = {
     // Dialogs
     'dialog.addUrl': 'URLを追加',
     'dialog.pasteText': 'テキストを貼り付け',
+
+    // Navigation
+    'nav.list': '一覧',
+    'nav.schedule': 'スケジュール',
+    'nav.editor': 'エディター',
+
+    // Schedule View
+    'schedule.title': 'スケジュール・進捗',
+    'schedule.today': '今日',
+    'schedule.thisWeek': '今週',
+    'schedule.thisMonth': '今月',
+    'schedule.todayRoutines': '今日のルーティン',
+    'schedule.completed': '完了',
+    'schedule.noRoutines': 'スケジュールされたルーティンはありません',
+    'schedule.noRoutinesDesc': 'ルーティンにスケジュールを追加して、ここで追跡しましょう。',
+    'schedule.streak': '日連続',
+    'schedule.skip': 'スキップ',
+    'schedule.markComplete': '完了にする',
+    'schedule.upcoming': '予定',
+    'schedule.weekOverview': '週間概要',
+
+    // Schedule Config
+    'scheduleConfig.title': 'スケジュール設定',
+    'scheduleConfig.frequency': '頻度',
+    'scheduleConfig.daily': '毎日',
+    'scheduleConfig.weekly': '毎週',
+    'scheduleConfig.monthly': '毎月',
+    'scheduleConfig.daysOfWeek': '曜日',
+    'scheduleConfig.dayOfMonth': '日付',
+    'scheduleConfig.reminderTime': 'リマインダー時間',
+    'scheduleConfig.enabled': 'スケジュールを有効にする',
   },
 } as const
 

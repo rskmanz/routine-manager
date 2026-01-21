@@ -1,8 +1,8 @@
-import type { Category, Goal, Routine, StorageData } from '@/types'
+import type { Category, Goal, Routine, StorageData, CompletionRecord, StreakInfo } from '@/types'
 import { generateId } from '@/lib/utils'
 
 const STORAGE_KEY = 'routine-manager-data'
-const STORAGE_VERSION = '2.0.0'  // Bumped for category support
+const STORAGE_VERSION = '3.0.0'  // Bumped for completion tracking
 
 // Default data with sample categories and goals
 function getDefaultData(): StorageData {
@@ -65,6 +65,7 @@ function getDefaultData(): StorageData {
       },
     ],
     routines: [],
+    completions: [],
   }
 }
 
@@ -104,6 +105,12 @@ export function loadStorage(): StorageData {
           categoryId: goal.categoryId || defaultCategoryId,
         }))
       }
+
+      // Migrate from v2 to v3 (add completions array)
+      if (!data.completions) {
+        data.completions = []
+      }
+
       data.version = STORAGE_VERSION
       saveStorage(data)
     }
@@ -357,9 +364,147 @@ export function deleteRoutine(id: string): boolean {
   if (index === -1) return false
 
   data.routines.splice(index, 1)
+  // Also delete associated completion records
+  data.completions = data.completions.filter((c) => c.routineId !== id)
   saveStorage(data)
 
   return true
+}
+
+// Completion operations
+export function getCompletions(): CompletionRecord[] {
+  const data = loadStorage()
+  return data.completions
+}
+
+export function getCompletionsByRoutine(routineId: string): CompletionRecord[] {
+  const data = loadStorage()
+  return data.completions.filter((c) => c.routineId === routineId)
+}
+
+export function getCompletionsByDate(date: string): CompletionRecord[] {
+  const data = loadStorage()
+  return data.completions.filter((c) => c.scheduledDate === date)
+}
+
+export function getCompletionsInRange(startDate: string, endDate: string): CompletionRecord[] {
+  const data = loadStorage()
+  return data.completions.filter((c) => c.scheduledDate >= startDate && c.scheduledDate <= endDate)
+}
+
+export function getCompletionByRoutineAndDate(routineId: string, date: string): CompletionRecord | undefined {
+  const data = loadStorage()
+  return data.completions.find((c) => c.routineId === routineId && c.scheduledDate === date)
+}
+
+export function createCompletion(completion: Omit<CompletionRecord, 'id'>): CompletionRecord {
+  const data = loadStorage()
+
+  const newCompletion: CompletionRecord = {
+    ...completion,
+    id: generateId(),
+  }
+
+  data.completions.push(newCompletion)
+  saveStorage(data)
+
+  return newCompletion
+}
+
+export function updateCompletion(id: string, updates: Partial<Omit<CompletionRecord, 'id'>>): CompletionRecord | null {
+  const data = loadStorage()
+  const index = data.completions.findIndex((c) => c.id === id)
+
+  if (index === -1) return null
+
+  const updatedCompletion: CompletionRecord = {
+    ...data.completions[index],
+    ...updates,
+  }
+
+  data.completions[index] = updatedCompletion
+  saveStorage(data)
+
+  return updatedCompletion
+}
+
+export function deleteCompletion(id: string): boolean {
+  const data = loadStorage()
+  const index = data.completions.findIndex((c) => c.id === id)
+
+  if (index === -1) return false
+
+  data.completions.splice(index, 1)
+  saveStorage(data)
+
+  return true
+}
+
+export function deleteCompletionsByRoutine(routineId: string): void {
+  const data = loadStorage()
+  data.completions = data.completions.filter((c) => c.routineId !== routineId)
+  saveStorage(data)
+}
+
+// Calculate streak information for a routine
+export function calculateStreak(routineId: string): StreakInfo {
+  const completions = getCompletionsByRoutine(routineId)
+    .filter((c) => c.status === 'completed')
+    .sort((a, b) => b.scheduledDate.localeCompare(a.scheduledDate))
+
+  if (completions.length === 0) {
+    return {
+      currentStreak: 0,
+      longestStreak: 0,
+      totalCompletions: 0,
+    }
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+  let currentStreak = 0
+  let longestStreak = 0
+  let tempStreak = 1
+
+  // Check if the most recent completion is today or yesterday (for current streak)
+  const lastDate = completions[0].scheduledDate
+  const daysDiff = Math.floor((new Date(today).getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24))
+
+  if (daysDiff <= 1) {
+    currentStreak = 1
+    for (let i = 1; i < completions.length; i++) {
+      const prevDate = new Date(completions[i - 1].scheduledDate)
+      const currDate = new Date(completions[i].scheduledDate)
+      const diff = Math.floor((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      if (diff === 1) {
+        currentStreak++
+      } else {
+        break
+      }
+    }
+  }
+
+  // Calculate longest streak
+  for (let i = 1; i < completions.length; i++) {
+    const prevDate = new Date(completions[i - 1].scheduledDate)
+    const currDate = new Date(completions[i].scheduledDate)
+    const diff = Math.floor((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diff === 1) {
+      tempStreak++
+    } else {
+      longestStreak = Math.max(longestStreak, tempStreak)
+      tempStreak = 1
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak, currentStreak)
+
+  return {
+    currentStreak,
+    longestStreak,
+    lastCompletedDate: completions[0]?.scheduledDate,
+    totalCompletions: completions.length,
+  }
 }
 
 // Export/Import for backup
@@ -384,3 +529,7 @@ export function importData(jsonString: string): boolean {
     return false
   }
 }
+
+// Re-export Supabase functions for when Supabase is configured
+export * from './supabase'
+export { isSupabaseConfigured, useSupabase } from '@/lib/supabase'
