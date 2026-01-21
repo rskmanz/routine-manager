@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { MoreHorizontal, Play, Pause, Edit2 } from 'lucide-react'
+import { MoreHorizontal, Play, Pause, Edit2, Trash2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Routine } from '@/types'
@@ -56,7 +56,7 @@ export function RoutineCard({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className={cn(
-        'group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 cursor-grab active:cursor-grabbing',
+        'group relative rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-zinc-400 hover:shadow-lg hover:shadow-zinc-500/5 cursor-grab active:cursor-grabbing',
         isDragging && 'opacity-50 shadow-2xl'
       )}
       {...attributes}
@@ -72,6 +72,15 @@ export function RoutineCard({
         >
           {routine.status}
         </span>
+        <button
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded-md text-zinc-400 hover:text-red-500"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(routine.id)
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -123,7 +132,7 @@ export function RoutineCard({
       {/* Integration indicator */}
       {routine.integration.enabled && (
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>{routine.integration.executorType}</span>
           {routine.integration.schedule && (
             <span className="text-muted-foreground/60">

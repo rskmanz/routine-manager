@@ -164,7 +164,7 @@ export function AddGoalDialog({
                     onClick={() => setIcon(i)}
                     className={`p-2 text-xl rounded-lg transition-all ${
                       icon === i
-                        ? 'bg-primary/20 ring-2 ring-primary'
+                        ? 'bg-zinc-200 ring-2 ring-zinc-400'
                         : 'hover:bg-accent'
                     }`}
                   >

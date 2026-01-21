@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { LayoutList, CalendarCheck, FileEdit, Settings } from 'lucide-react'
+import { LayoutList, CalendarCheck, FileEdit, Settings, User } from 'lucide-react'
 import { useNavigation } from '@/contexts/NavigationContext'
 import type { ViewType } from '@/types'
 import { cn } from '@/lib/utils'
@@ -29,13 +29,14 @@ export function LeftSidebar() {
     <motion.aside
       initial={{ x: -56, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="fixed left-0 top-0 z-50 flex h-screen w-14 flex-col items-center border-r border-border bg-background/95 backdrop-blur-sm py-4"
+      className="fixed left-0 top-0 z-50 flex h-screen w-20 flex-col items-center border-r border-border bg-background/95 backdrop-blur-sm py-4"
     >
-      {/* Logo/Brand */}
+      {/* User Icon */}
       <div className="mb-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-lg shadow-lg">
-          R
-        </div>
+        <button className="flex flex-col items-center gap-1 p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+          <User className="h-5 w-5" />
+          <span className="text-[10px] font-medium">User</span>
+        </button>
       </div>
 
       {/* Navigation Items */}
@@ -88,27 +89,14 @@ function NavButton({ icon: Icon, label, isActive, onClick }: NavButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200',
+        'flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 w-16',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-md'
+          ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md'
           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       )}
     >
       <Icon className="h-5 w-5" />
-
-      {/* Active indicator */}
-      {isActive && (
-        <motion.div
-          layoutId="nav-indicator"
-          className="absolute -left-[3px] h-6 w-1.5 rounded-full bg-primary"
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        />
-      )}
-
-      {/* Tooltip */}
-      <span className="absolute left-full ml-3 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
-        {label}
-      </span>
+      <span className="text-[10px] font-medium truncate w-full text-center">{label}</span>
     </button>
   )
 }

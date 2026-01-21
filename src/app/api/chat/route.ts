@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { chat, parseBlockSuggestions, type ChatMessage, type RoutineContext } from '@/lib/ai'
+import { chat, parseBlockSuggestions, type ChatMessage, type RoutineContext, type AppContext } from '@/lib/ai'
 import { z } from 'zod'
 
 const requestSchema = z.object({
@@ -26,25 +26,52 @@ const requestSchema = z.object({
       ).optional(),
     })
     .optional(),
+  appContext: z
+    .object({
+      categories: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          icon: z.string().optional(),
+        })
+      ),
+      goals: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          categoryId: z.string(),
+        })
+      ),
+      routines: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          goalId: z.string(),
+        })
+      ),
+    })
+    .optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { messages, routineContext } = requestSchema.parse(body)
+    const { messages, routineContext, appContext } = requestSchema.parse(body)
 
-    const response = await chat(
+    const result = await chat(
       messages as ChatMessage[],
-      routineContext as RoutineContext | undefined
+      routineContext as RoutineContext | undefined,
+      appContext as AppContext | undefined
     )
 
-    const suggestedBlocks = parseBlockSuggestions(response)
+    const suggestedBlocks = parseBlockSuggestions(result.message)
 
     return NextResponse.json({
       success: true,
       data: {
-        message: response,
+        message: result.message,
         suggestedBlocks,
+        toolCalls: result.toolCalls,
       },
     })
   } catch (error) {

@@ -26,17 +26,27 @@ import {
   Wand2,
   Zap,
   Calendar,
+  Check,
 } from 'lucide-react'
 import { useRoutine, useGoals, useRoutines, useCategories } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
 import { useExecutor } from '@/hooks/useExecutor'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { IntegrationPanel } from '@/components/editor'
+import { IntegrationPanel, IntegrationTabContent } from '@/components/editor'
 import { SourcesPanel } from '@/components/resources'
-import { ScheduleConfigDialog } from '@/components/schedule/ScheduleConfigDialog'
+import { SchedulePanel } from '@/components/schedule/SchedulePanel'
+import { useCompletions } from '@/hooks/useCompletions'
 import type { ResourceSource, RoutineSchedule } from '@/types'
 import { cn } from '@/lib/utils'
 import { generateId } from '@/lib/utils'
@@ -69,17 +79,17 @@ export default function RoutineEditorPage({ params }: PageProps) {
   const { goals } = useGoals()
   const { routines: allRoutines } = useRoutines()
   const { execute, isExecuting } = useExecutor()
-  const { t } = useTranslation()
+  const { getStreakInfo } = useCompletions()
+  const { t, locale, changeLocale } = useTranslation()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [sources, setSources] = useState<ResourceSource[]>([])
   const [isIntegrationOpen, setIsIntegrationOpen] = useState(false)
-  const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
-  const [activeTab, setActiveTab] = useState<'editor' | 'sources'>('editor')
+  const [activeTab, setActiveTab] = useState<'editor' | 'sources' | 'schedule' | 'integration'>('editor')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Auto-expand the category and goal that contains the current routine
@@ -126,9 +136,11 @@ export default function RoutineEditorPage({ params }: PageProps) {
   }
 
   const { messages, isLoading: isChatLoading, sendMessage } = useChat({
-    title: routine?.title || '',
-    blocks: [{ type: 'text', content }],
-    sources: sources.map((s) => ({ title: s.title, content: s.content })),
+    routineContext: {
+      title: routine?.title || '',
+      blocks: [{ type: 'text', content }],
+      sources: sources.map((s) => ({ title: s.title, content: s.content })),
+    },
   })
 
   const scrollToBottom = () => {
@@ -254,10 +266,12 @@ export default function RoutineEditorPage({ params }: PageProps) {
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Floating Header */}
-      <div className="sticky top-4 z-50 px-4 mb-6">
-        <header className="max-w-[1200px] mx-auto px-4 py-3 rounded-2xl backdrop-blur-xl bg-white/80 dark:bg-black/60 border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-black/5 ring-1 ring-black/5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      {/* Main Page Layout */}
+      <div className="relative z-10 max-w-[1400px] mx-auto w-full px-4 flex flex-col h-[calc(100vh-2rem)] my-4">
+
+        {/* Header - Full Width at Top */}
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-3 px-2 mb-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -265,177 +279,203 @@ export default function RoutineEditorPage({ params }: PageProps) {
                 handleSave()
                 router.push('/')
               }}
-              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-xl"
+              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-xl flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-
-            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
-
-            <div className="flex flex-col">
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleSave}
-                className="text-lg font-bold bg-transparent border-0 p-0 focus-visible:ring-0 w-full sm:w-[300px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-                placeholder="Routine title..."
-              />
-            </div>
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleSave}
+              className="text-xl font-bold bg-transparent border-0 p-0 focus-visible:ring-0 w-full sm:w-[400px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+              placeholder="Routine title..."
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSave}
-              className="gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg hidden sm:flex"
-            >
-              <Save className="h-4 w-4" />
-              {t('button.save')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsIntegrationOpen(true)}
-              className="gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
-            >
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('button.settings')}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsScheduleOpen(true)}
-              className={cn(
-                "gap-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg",
-                routine.schedule?.enabled
-                  ? "text-primary"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-              )}
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('nav.schedule')}</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleRun}
-              disabled={isExecuting || !routine.integration.enabled}
-              className="gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md rounded-xl"
-            >
-              {isExecuting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-              <span className="hidden sm:inline">{t('button.run')}</span>
-            </Button>
-          </div>
-        </header>
-      </div>
-
-      {/* Main Page Layout (Fixed Height) */}
-      <div className="relative z-10 max-w-[1200px] mx-auto w-full px-4 flex gap-8 h-[calc(100vh-100px)]">
-
-        {/* Left Sidebar - Navigation */}
-        <aside className="w-64 flex-shrink-0 hidden lg:block overflow-y-auto">
-          <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-4">
-            <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-4 px-2">
-              <Folder className="h-4 w-4" />
-              <span className="font-semibold text-xs uppercase tracking-wider">{t('editor.explorer')}</span>
-            </div>
-            <nav className="space-y-1">
-              {categories.map((category) => (
-                <div key={category.id}>
-                  <button
-                    onClick={() => toggleCategoryExpanded(category.id)}
-                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-left text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-                  >
-                    {expandedCategories.has(category.id) ? (
-                      <ChevronDown className="w-3 h-3 shrink-0" />
-                    ) : (
-                      <ChevronRight className="w-3 h-3 shrink-0" />
-                    )}
-                    <span className="opacity-70">{iconMap[category.icon] || <Folder className="w-4 h-4" />}</span>
-                    <span className="font-medium truncate">{category.title}</span>
-                  </button>
-
-                  {expandedCategories.has(category.id) && (
-                    <div className="ml-4 space-y-1">
-                      {getGoalsForCategory(category.id).map((goal) => (
-                        <div key={goal.id}>
-                          <button
-                            onClick={() => toggleGoalExpanded(goal.id)}
-                            className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-left text-xs text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-                          >
-                            {expandedGoals.has(goal.id) ? (
-                              <ChevronDown className="w-3 h-3 shrink-0" />
-                            ) : (
-                              <ChevronRight className="w-3 h-3 shrink-0" />
-                            )}
-                            <Target className="w-3 h-3 text-indigo-500 shrink-0" />
-                            <span className="truncate">{goal.title}</span>
-                          </button>
-
-                          {expandedGoals.has(goal.id) && (
-                            <div className="ml-5 space-y-0.5">
-                              {getRoutinesForGoal(goal.id).map((r) => (
-                                <Link
-                                  key={r.id}
-                                  href={`/routines/${r.id}`}
-                                  className={cn(
-                                    "block p-1.5 rounded-md text-xs truncate transition-colors",
-                                    r.id === id
-                                      ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium"
-                                      : "text-zinc-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-zinc-700 dark:hover:text-zinc-300"
-                                  )}
-                                >
-                                  {r.title}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+            <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSave}
+                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-8 w-8"
+                  title={t('button.save')}
+                >
+                  <Save className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsIntegrationOpen(true)}
+                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-8 w-8"
+                  title={t('button.settings')}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+                <Button
+                  size="sm"
+                  onClick={handleRun}
+                  disabled={isExecuting || !routine.integration.enabled}
+                  className="gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md rounded-lg h-8 px-3 text-xs"
+                >
+                  {isExecuting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5" />
                   )}
-                </div>
-              ))}
-            </nav>
-          </div>
-        </aside>
+                  <span>{t('button.run')}</span>
+                </Button>
+            </div>
+        </header>
 
-        {/* Center Content - Editor */}
-        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          {/* Editor/Sources Switcher */}
-          <div className="flex items-center gap-1 mb-6 bg-zinc-100/50 dark:bg-zinc-800/50 p-1 rounded-xl w-fit backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50">
-            <button
-              onClick={() => setActiveTab('editor')}
-              className={cn(
-                "px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
-                activeTab === 'editor'
-                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-              )}
-            >
-              {t('editor.title')}
-            </button>
-            <button
-              onClick={() => setActiveTab('sources')}
-              className={cn(
-                "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                activeTab === 'sources'
-                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-              )}
-            >
-              {t('editor.sources')}
-              {sources.length > 0 && <span className="bg-zinc-200 dark:bg-zinc-700 px-1.5 rounded-full text-[10px]">{sources.length}</span>}
-            </button>
-          </div>
+        {/* 3-Column Content Area */}
+        <div className="flex gap-4 flex-1 min-h-0">
+          {/* Left Sidebar - Navigation */}
+          <aside className="w-56 flex-shrink-0 hidden lg:block">
+            <div className="h-full bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-white/10 p-3 shadow-xl shadow-indigo-500/5 ring-1 ring-white/20 dark:ring-white/5 overflow-y-auto custom-scrollbar">
+              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-3 px-2">
+                <Folder className="h-4 w-4" />
+                <span className="font-semibold text-xs uppercase tracking-wider">{t('editor.explorer')}</span>
+              </div>
+              <nav className="space-y-1">
+                {categories.map((category) => (
+                  <div key={category.id}>
+                    <button
+                      onClick={() => toggleCategoryExpanded(category.id)}
+                      className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-left text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors group"
+                    >
+                      {expandedCategories.has(category.id) ? (
+                        <ChevronDown className="w-3.5 h-3.5 shrink-0 text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 transition-colors" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 transition-colors" />
+                      )}
+                      <span className="opacity-70 group-hover:opacity-100 transition-opacity">{iconMap[category.icon] || <Folder className="w-4 h-4" />}</span>
+                      <span className="font-medium truncate text-xs">{category.title}</span>
+                    </button>
 
-          <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl shadow-sm flex-1 relative overflow-hidden">
-            {activeTab === 'editor' ? (
-              <div className="p-8 md:p-12 h-full overflow-y-auto">
+                    <AnimatePresence>
+                      {expandedCategories.has(category.id) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="ml-2.5 pl-2.5 border-l border-zinc-200 dark:border-zinc-800 space-y-1 overflow-hidden"
+                        >
+                          {getGoalsForCategory(category.id).map((goal) => (
+                            <div key={goal.id}>
+                              <button
+                                onClick={() => toggleGoalExpanded(goal.id)}
+                                className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-left text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors group"
+                              >
+                                {expandedGoals.has(goal.id) ? (
+                                  <ChevronDown className="w-3 h-3 shrink-0 text-zinc-300 group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 shrink-0 text-zinc-300 group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400" />
+                                )}
+                                <Target className="w-3 h-3 text-indigo-500/70 group-hover:text-indigo-500 shrink-0 transition-colors" />
+                                <span className="truncate">{goal.title}</span>
+                              </button>
+
+                              <AnimatePresence>
+                                {expandedGoals.has(goal.id) && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="ml-2 pl-2 border-l border-zinc-200 dark:border-zinc-800 space-y-0.5 overflow-hidden"
+                                  >
+                                    {getRoutinesForGoal(goal.id).map((r) => (
+                                      <Link
+                                        key={r.id}
+                                        href={`/routines/${r.id}`}
+                                        className={cn(
+                                          "block px-2 py-1.5 rounded-md text-xs truncate transition-all border-l-2",
+                                          r.id === id
+                                            ? "bg-gradient-to-r from-indigo-500/10 to-transparent border-indigo-500 text-indigo-700 dark:text-indigo-300 font-medium"
+                                            : "border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5"
+                                        )}
+                                      >
+                                        {r.title}
+                                      </Link>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Center - Editor Content */}
+          <main className="flex-1 min-w-0 flex flex-col">
+            {/* Chrome-style tabs */}
+            <div className="flex items-end gap-0.5 pl-2">
+              <button
+                onClick={() => setActiveTab('editor')}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg",
+                  activeTab === 'editor'
+                    ? "bg-white/80 dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 z-10"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                {t('editor.title')}
+              </button>
+              <button
+                onClick={() => setActiveTab('sources')}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg flex items-center gap-1.5",
+                  activeTab === 'sources'
+                    ? "bg-white/80 dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 z-10"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                {t('editor.sources')}
+                {sources.length > 0 && <span className="bg-zinc-300 dark:bg-zinc-600 px-1.5 rounded-full text-[9px] min-w-[16px] text-center">{sources.length}</span>}
+              </button>
+              <button
+                onClick={() => setActiveTab('schedule')}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg flex items-center gap-1.5",
+                  activeTab === 'schedule'
+                    ? "bg-white/80 dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 z-10"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                <Calendar className="h-3 w-3" />
+                {t('nav.schedule')}
+                {routine.schedule?.enabled && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('integration')}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg flex items-center gap-1.5",
+                  activeTab === 'integration'
+                    ? "bg-white/80 dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 z-10"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                <Zap className="h-3 w-3" />
+                Integration
+                {routine.integration.enabled && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+              </button>
+            </div>
+
+            {/* Content area */}
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl rounded-tl-none shadow-2xl shadow-indigo-500/10 ring-1 ring-white/40 dark:ring-white/5 flex-1 relative overflow-hidden">
+            {activeTab === 'editor' && (
+              <div className="p-8 md:p-12 h-full overflow-y-auto custom-scrollbar">
                 <Textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -445,7 +485,8 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   spellCheck={false}
                 />
               </div>
-            ) : (
+            )}
+            {activeTab === 'sources' && (
               <div className="p-8 h-full overflow-y-auto">
                 <SourcesPanel
                   sources={sources}
@@ -455,12 +496,27 @@ export default function RoutineEditorPage({ params }: PageProps) {
                 />
               </div>
             )}
-          </div>
-        </main>
+            {activeTab === 'schedule' && (
+              <div className="h-full overflow-y-auto">
+                <SchedulePanel
+                  schedule={routine.schedule}
+                  streakInfo={getStreakInfo(routine.id)}
+                  onSave={handleScheduleSave}
+                />
+              </div>
+            )}
+            {activeTab === 'integration' && (
+              <IntegrationTabContent
+                routine={routine}
+                onUpdate={updateRoutine}
+              />
+            )}
+            </div>
+          </main>
 
-        {/* Right Sidebar - AI Chat */}
-        <aside className="w-80 flex-shrink-0 hidden xl:block">
-          <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col h-full shadow-sm">
+          {/* Right Sidebar - AI Chat */}
+          <aside className="w-72 flex-shrink-0 hidden xl:block">
+            <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-white/10 flex flex-col h-full shadow-xl shadow-purple-500/5 ring-1 ring-white/20 dark:ring-white/5">
             <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center gap-2">
               <div className="p-1.5 bg-indigo-500/10 rounded-lg">
                 <Sparkles className="h-4 w-4 text-indigo-500" />
@@ -519,9 +575,9 @@ export default function RoutineEditorPage({ params }: PageProps) {
                 <Button size="icon" onClick={handleChatSend} disabled={isChatLoading} className="absolute right-1 top-1 h-8 w-8 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700"><Send className="h-4 w-4" /></Button>
               </div>
             </div>
-          </div>
-        </aside>
-
+            </div>
+          </aside>
+        </div>
       </div>
 
       {/* Integration Panel */}
@@ -535,13 +591,6 @@ export default function RoutineEditorPage({ params }: PageProps) {
         )}
       </AnimatePresence>
 
-      {/* Schedule Config Dialog */}
-      <ScheduleConfigDialog
-        open={isScheduleOpen}
-        onOpenChange={setIsScheduleOpen}
-        schedule={routine.schedule}
-        onSave={handleScheduleSave}
-      />
     </div>
   )
 }

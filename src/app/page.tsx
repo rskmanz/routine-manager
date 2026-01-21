@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Sparkles, MessageCircle, X, Send, FolderPlus, Target, ListChecks, Loader2 } from 'lucide-react'
+import { Plus, Sparkles, MessageCircle, X, Send, FolderPlus, Target, ListChecks, Loader2, CheckCircle, XCircle, User, Check } from 'lucide-react'
 import { useCategories, useGoals, useRoutines } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -20,7 +20,16 @@ import {
 } from '@/components/grid'
 import type { LayoutType } from '@/components/grid/layouts/types'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { Category, Goal, Routine } from '@/types'
+import { getToolActionText } from '@/lib/ai/tools'
 export default function Home() {
   const router = useRouter()
   const {
@@ -55,7 +64,7 @@ export default function Home() {
   const [layoutType, setLayoutType] = useState<LayoutType>('scroll')
 
   // Translation
-  const { t } = useTranslation()
+  const { t, locale, changeLocale } = useTranslation()
 
   // AI Chat state
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -70,13 +79,40 @@ export default function Home() {
     return routines.filter((r) => r.goalId === goalId)
   }
 
-  // AI Chat
+  // AI Chat with tool handlers
   const { messages, isLoading: isChatLoading, sendMessage } = useChat({
-    title: 'Home Assistant',
-    blocks: categories.map(c => ({
-      type: 'category' as const,
-      content: `${c.title}: ${getGoalsForCategory(c.id).map(g => g.title).join(', ') || 'no goals yet'}`
-    })),
+    appContext: {
+      categories: categories.map(c => ({ id: c.id, title: c.title, icon: c.icon })),
+      goals: goals.map(g => ({ id: g.id, title: g.title, categoryId: g.categoryId })),
+      routines: routines.map(r => ({ id: r.id, title: r.title, goalId: r.goalId })),
+    },
+    toolHandlers: {
+      onCreateCategory: async (args) => {
+        const cat = createCategory({ title: args.title, icon: args.icon || 'Folder' })
+        return { id: cat.id, title: cat.title }
+      },
+      onCreateGoal: async (args) => {
+        const goal = createGoal({
+          title: args.title,
+          description: args.description || '',
+          categoryId: args.categoryId,
+          icon: args.icon || '🎯',
+          color: '',
+        })
+        return { id: goal.id, title: goal.title }
+      },
+      onCreateRoutine: async (args) => {
+        const routine = createRoutine({
+          title: args.title,
+          goalId: args.goalId,
+          blocks: [],
+          sources: [],
+          status: 'active',
+          integration: { enabled: false, executorType: 'cli', config: {} },
+        })
+        return { id: routine.id, title: routine.title }
+      },
+    },
   })
 
   const scrollToBottom = () => {
@@ -167,47 +203,49 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-zinc-950 dark:via-black dark:to-zinc-900">
-      {/* Floating Header */}
-      <div className="sticky top-4 z-40 px-4">
-        <header className="max-w-[1600px] mx-auto px-5 py-3 rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-black/50 border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-black/5 ring-1 ring-black/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative p-2 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md shadow-purple-500/20">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                {t('app.title')}
-              </h1>
+      {/* Main Content */}
+      <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-8">
+
+        {/* Integrated Toolbar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="relative p-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 shadow-md">
+              <Sparkles className="h-4 w-4 text-white dark:text-zinc-900" />
             </div>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              {t('app.title')}
+            </h1>
+            <button
+              onClick={() => changeLocale(locale === 'en' ? 'ja' : 'en')}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors"
+            >
+              {locale === 'en' ? '日本語' : 'EN'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 bg-white/40 dark:bg-zinc-800/40 p-1.5 rounded-2xl backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm ring-1 ring-black/5">
+            <LayoutSwitcher value={layoutType} onChange={setLayoutType} />
             <div className="flex items-center gap-2">
-              <LayoutSwitcher value={layoutType} onChange={setLayoutType} />
-              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-2" />
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsAddCategoryOpen(true)}
-                  className="gap-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t('button.category')}</span>
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleAddGoal(categories[0]?.id || '')}
-                  className="gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/20"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t('button.goal')}</span>
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddCategoryOpen(true)}
+                className="gap-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-700/50"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('button.category')}</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleAddGoal(categories[0]?.id || '')}
+                className="gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md shadow-black/5"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('button.goal')}</span>
+              </Button>
             </div>
           </div>
-        </header>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-8 py-12 space-y-16">
+        </div>
         {categories.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -215,7 +253,7 @@ export default function Home() {
             className="flex flex-col items-center justify-center py-20 text-center"
           >
             <div className="rounded-full bg-white/50 dark:bg-white/5 p-6 mb-6 backdrop-blur-xl border border-white/20">
-              <Sparkles className="h-12 w-12 text-primary" />
+              <Sparkles className="h-12 w-12 text-zinc-600 dark:text-zinc-400" />
             </div>
             <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
               {t('app.welcome')}
@@ -401,16 +439,44 @@ export default function Home() {
                   </div>
                 ) : (
                   messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={cn(
-                        "p-3 rounded-2xl text-sm max-w-[85%]",
-                        msg.role === 'user'
-                          ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white ml-auto"
-                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 mr-auto"
+                    <div key={msg.id} className="space-y-2">
+                      <div
+                        className={cn(
+                          "p-3 rounded-2xl text-sm max-w-[85%]",
+                          msg.role === 'user'
+                            ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white ml-auto"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 mr-auto"
+                        )}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                      {/* Show executed tool calls */}
+                      {msg.executedToolCalls && msg.executedToolCalls.length > 0 && (
+                        <div className="space-y-1 mr-auto max-w-[85%]">
+                          {msg.executedToolCalls.map((call) => (
+                            <div
+                              key={call.id}
+                              className={cn(
+                                "p-2 rounded-lg border text-xs flex items-center gap-2",
+                                call.result.success
+                                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+                                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+                              )}
+                            >
+                              {call.result.success ? (
+                                <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                              ) : (
+                                <XCircle className="h-4 w-4 flex-shrink-0" />
+                              )}
+                              <span>
+                                {call.result.success
+                                  ? getToolActionText(call.name, call.input)
+                                  : `${call.name} failed: ${call.result.error}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
                     </div>
                   ))
                 )}
@@ -468,7 +534,7 @@ export default function Home() {
                     size="icon"
                     onClick={handleChatSend}
                     disabled={isChatLoading || !chatInput.trim()}
-                    className="absolute right-1 top-1 h-8 w-8 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600"
+                    className="absolute right-1 top-1 h-8 w-8 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200"
                   >
                     <Send className="h-4 w-4" />
                   </Button>

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { AI_TOOLS, type ToolCallResult } from './tools'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -20,6 +21,17 @@ export interface RoutineContext {
   sources?: SourceContext[]
 }
 
+export interface AppContext {
+  categories: { id: string; title: string; icon?: string }[]
+  goals: { id: string; title: string; categoryId: string }[]
+  routines: { id: string; title: string; goalId: string }[]
+}
+
+export interface ChatResult {
+  message: string
+  toolCalls: ToolCallResult[]
+}
+
 const SYSTEM_PROMPT = `You are an AI assistant helping users create and manage their personal routines.
 
 Your capabilities:
@@ -27,6 +39,13 @@ Your capabilities:
 2. Help organize and structure routines
 3. Recommend automation strategies using different executors (MCP servers, GitHub Actions, CLI commands, code plugins)
 4. Provide tips for habit formation and routine optimization
+5. **CREATE categories, goals, and routines using the available tools**
+
+IMPORTANT TOOL USAGE:
+- When the user asks to create a category, goal, or routine, USE THE APPROPRIATE TOOL to create it.
+- For create_goal: You must provide a valid categoryId. If no category exists, create one first.
+- For create_routine: You must provide a valid goalId. If no goal exists, create one first.
+- Always explain what you created after using a tool.
 
 When suggesting blocks, format them as:
 [BLOCK:type]
@@ -39,9 +58,26 @@ Be concise and helpful. Focus on practical, actionable suggestions.`
 
 export async function chat(
   messages: ChatMessage[],
-  routineContext?: RoutineContext
-): Promise<string> {
+  routineContext?: RoutineContext,
+  appContext?: AppContext
+): Promise<ChatResult> {
   let systemPrompt = SYSTEM_PROMPT
+
+  // Add app context (available categories, goals, routines)
+  if (appContext) {
+    systemPrompt += `\n\n## Available Data\n`
+    if (appContext.categories.length > 0) {
+      systemPrompt += `Categories:\n${appContext.categories.map(c => `- ${c.title} (id: ${c.id})`).join('\n')}\n\n`
+    } else {
+      systemPrompt += `No categories exist yet. Create one first before creating goals.\n\n`
+    }
+    if (appContext.goals.length > 0) {
+      systemPrompt += `Goals:\n${appContext.goals.map(g => `- ${g.title} (id: ${g.id}, categoryId: ${g.categoryId})`).join('\n')}\n\n`
+    }
+    if (appContext.routines.length > 0) {
+      systemPrompt += `Routines:\n${appContext.routines.map(r => `- ${r.title} (id: ${r.id}, goalId: ${r.goalId})`).join('\n')}\n`
+    }
+  }
 
   if (routineContext) {
     systemPrompt += `\n\nCurrent routine context:
@@ -70,14 +106,39 @@ Blocks: ${JSON.stringify(routineContext.blocks, null, 2)}`
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
     system: systemPrompt,
+    tools: AI_TOOLS,
     messages: messages.map((m) => ({
       role: m.role,
       content: m.content,
     })),
   })
 
-  const textBlock = response.content.find((block) => block.type === 'text')
-  return textBlock ? textBlock.text : ''
+  // Extract text content and tool calls
+  let message = ''
+  const toolCalls: ToolCallResult[] = []
+
+  for (const block of response.content) {
+    if (block.type === 'text') {
+      message += block.text
+    } else if (block.type === 'tool_use') {
+      toolCalls.push({
+        toolUseId: block.id,
+        name: block.name,
+        input: block.input as Record<string, unknown>,
+      })
+    }
+  }
+
+  return { message, toolCalls }
+}
+
+// Legacy function for backward compatibility
+export async function chatSimple(
+  messages: ChatMessage[],
+  routineContext?: RoutineContext
+): Promise<string> {
+  const result = await chat(messages, routineContext)
+  return result.message
 }
 
 export function parseBlockSuggestions(text: string): { type: string; content: string }[] {

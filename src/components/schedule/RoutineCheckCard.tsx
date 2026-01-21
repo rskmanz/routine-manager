@@ -48,7 +48,7 @@ export function RoutineCheckCard({
           ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
           : isSkipped
           ? 'bg-muted/50 border-border opacity-60'
-          : 'bg-card border-border hover:border-primary/30 hover:shadow-sm'
+          : 'bg-card border-border hover:border-zinc-400 hover:shadow-sm'
       )}
     >
       {/* Checkbox */}
@@ -58,7 +58,7 @@ export function RoutineCheckCard({
           'flex-shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all',
           isCompleted
             ? 'bg-emerald-500 border-emerald-500 text-white'
-            : 'border-muted-foreground/30 hover:border-primary'
+            : 'border-muted-foreground/30 hover:border-zinc-500'
         )}
       >
         {isCompleted && <Check className="h-4 w-4" />}

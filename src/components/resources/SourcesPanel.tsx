@@ -102,8 +102,8 @@ function EmptyState({ onAdd, t }: { onAdd: () => void; t: (key: any) => string }
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 px-4 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/30"
     >
-      <div className="rounded-full bg-primary/10 p-4 mb-4">
-        <BookOpen className="h-8 w-8 text-primary" />
+      <div className="rounded-full bg-zinc-100 dark:bg-zinc-800 p-4 mb-4">
+        <BookOpen className="h-8 w-8 text-zinc-600 dark:text-zinc-400" />
       </div>
       <h3 className="font-semibold text-lg mb-2">{t('sources.empty')}</h3>
       <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">

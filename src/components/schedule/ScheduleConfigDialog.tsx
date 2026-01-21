@@ -96,7 +96,7 @@ export function ScheduleConfigDialog({
               className="flex items-center gap-2 text-sm"
             >
               {enabled ? (
-                <ToggleRight className="h-6 w-6 text-primary" />
+                <ToggleRight className="h-6 w-6 text-zinc-700" />
               ) : (
                 <ToggleLeft className="h-6 w-6 text-muted-foreground" />
               )}
@@ -118,8 +118,8 @@ export function ScheduleConfigDialog({
                       className={cn(
                         'px-3 py-2 rounded-lg border text-sm font-medium transition-all',
                         frequency === freq
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/30'
+                          ? 'border-zinc-400 bg-zinc-100 text-zinc-900'
+                          : 'border-border hover:border-zinc-300'
                       )}
                     >
                       {t(`scheduleConfig.${freq}` as any)}
@@ -142,7 +142,7 @@ export function ScheduleConfigDialog({
                         className={cn(
                           'w-10 h-10 rounded-full text-xs font-medium transition-all',
                           selectedDays.includes(day)
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-zinc-800 text-white'
                             : 'bg-muted hover:bg-muted/80'
                         )}
                       >

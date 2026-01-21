@@ -122,6 +122,13 @@ const translations = {
     'scheduleConfig.dayOfMonth': 'Day of month',
     'scheduleConfig.reminderTime': 'Reminder time',
     'scheduleConfig.enabled': 'Enable schedule',
+
+    // Schedule Panel
+    'schedule.currentStreak': 'Current streak',
+    'schedule.longestStreak': 'Longest streak',
+    'schedule.totalCompletions': 'Total completions',
+    'schedule.enabledDesc': 'This routine is scheduled for tracking',
+    'schedule.disabledDesc': 'Enable to track completion and build streaks',
   },
   ja: {
     // Home page
@@ -238,6 +245,13 @@ const translations = {
     'scheduleConfig.dayOfMonth': '日付',
     'scheduleConfig.reminderTime': 'リマインダー時間',
     'scheduleConfig.enabled': 'スケジュールを有効にする',
+
+    // Schedule Panel
+    'schedule.currentStreak': '連続日数',
+    'schedule.longestStreak': '最長連続',
+    'schedule.totalCompletions': '完了数',
+    'schedule.enabledDesc': 'このルーティンは追跡されています',
+    'schedule.disabledDesc': '有効にして完了を追跡し、連続記録を作りましょう',
   },
 } as const
 

@@ -99,7 +99,7 @@ export function ScheduleView() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-primary" />
+                <CalendarDays className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
                 {t('schedule.todayRoutines')}
               </h2>
               <span className="text-sm text-muted-foreground">
@@ -171,7 +171,7 @@ export function ScheduleView() {
                     className={cn(
                       'p-3 rounded-xl border text-center transition-all',
                       isTodayDate
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800'
                         : 'border-border'
                     )}
                   >
@@ -184,7 +184,7 @@ export function ScheduleView() {
                     <div
                       className={cn(
                         'text-lg font-semibold mb-2',
-                        isTodayDate && 'text-primary'
+                        isTodayDate && 'text-zinc-900 dark:text-zinc-100'
                       )}
                     >
                       {date.getDate()}

@@ -165,10 +165,10 @@ export function GridLayout({
                   <div className="mt-4 pt-3 border-t border-white/20 dark:border-white/5">
                     <button
                       onClick={() => onAddRoutine(goal.id)}
-                      className="flex items-center justify-between w-full text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-primary transition-colors group/btn"
+                      className="flex items-center justify-between w-full text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors group/btn"
                     >
                       <span>Add Routine</span>
-                      <div className="p-1.5 rounded-full bg-white/50 dark:bg-white/10 group-hover/btn:bg-primary group-hover/btn:text-white transition-colors">
+                      <div className="p-1.5 rounded-full bg-white/50 dark:bg-white/10 group-hover/btn:bg-zinc-900 dark:group-hover/btn:bg-zinc-100 group-hover/btn:text-white dark:group-hover/btn:text-zinc-900 transition-colors">
                         <Plus className="w-4 h-4" />
                       </div>
                     </button>

@@ -163,8 +163,8 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               className={cn(
                 'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all',
                 mode === 'url'
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                  ? 'border-zinc-400 bg-zinc-100 text-zinc-900'
+                  : 'border-border hover:border-zinc-300 hover:bg-muted/50'
               )}
             >
               <Link className="h-4 w-4" />
@@ -176,8 +176,8 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               className={cn(
                 'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all',
                 mode === 'text'
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/30 hover:bg-muted/50'
+                  ? 'border-zinc-400 bg-zinc-100 text-zinc-900'
+                  : 'border-border hover:border-zinc-300 hover:bg-muted/50'
               )}
             >
               <FileText className="h-4 w-4" />
@@ -237,7 +237,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
                   <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg max-h-32 overflow-y-auto">
                     {content.slice(0, 500)}
                     {content.length > 500 && (
-                      <span className="text-primary"> ...more</span>
+                      <span className="text-zinc-500"> ...more</span>
                     )}
                   </div>
                 </div>

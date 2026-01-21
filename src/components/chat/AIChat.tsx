@@ -20,8 +20,10 @@ export function AIChat({ routineTitle, routineBlocks, onInsertBlock }: AIChatPro
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { messages, isLoading, error, sendMessage } = useChat({
-    title: routineTitle,
-    blocks: routineBlocks.map((b) => ({ type: b.type, content: b.content })),
+    routineContext: {
+      title: routineTitle,
+      blocks: routineBlocks.map((b) => ({ type: b.type, content: b.content })),
+    },
   })
 
   const scrollToBottom = () => {

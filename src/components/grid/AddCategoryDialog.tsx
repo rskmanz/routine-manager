@@ -138,7 +138,7 @@ export function AddCategoryDialog({
                     onClick={() => setIcon(i.name)}
                     className={`p-2.5 rounded-lg transition-all ${
                       icon === i.name
-                        ? 'bg-primary/20 ring-2 ring-primary text-primary'
+                        ? 'bg-zinc-200 ring-2 ring-zinc-400 text-zinc-900'
                         : 'hover:bg-accent text-muted-foreground'
                     }`}
                   >
@@ -167,8 +167,8 @@ export function AddCategoryDialog({
                       className={cn(
                         'flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
                         colorPattern === pattern
-                          ? 'border-primary bg-primary/5 ring-2 ring-primary'
-                          : 'border-border hover:border-primary/50 hover:bg-accent'
+                          ? 'border-zinc-400 bg-zinc-100 ring-2 ring-zinc-400'
+                          : 'border-border hover:border-zinc-300 hover:bg-accent'
                       )}
                     >
                       <div className="flex -space-x-1">
@@ -189,7 +189,7 @@ export function AddCategoryDialog({
                         </div>
                       </div>
                       {colorPattern === pattern && (
-                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        <Check className="w-4 h-4 text-zinc-700 flex-shrink-0" />
                       )}
                     </button>
                   )

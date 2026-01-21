@@ -1,20 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Globe,
   Github,
   Terminal,
   Code,
-  X,
-  Check,
   Search,
   ExternalLink,
   Loader2,
   Copy,
   CheckCircle,
   AlertCircle,
+  X,
+  Zap,
 } from 'lucide-react'
 import { GITHUB_WORKFLOW_TEMPLATE, GITHUB_WORKFLOW_FILENAME } from '@/lib/executors/github-workflow-template'
 import { Button } from '@/components/ui/button'
@@ -55,13 +55,12 @@ const executorOptions: {
   },
 ]
 
-interface IntegrationPanelProps {
+interface IntegrationTabContentProps {
   routine: Routine
   onUpdate: (updates: Partial<Routine>) => void
-  onClose: () => void
 }
 
-export function IntegrationPanel({ routine, onUpdate, onClose }: IntegrationPanelProps) {
+export function IntegrationTabContent({ routine, onUpdate }: IntegrationTabContentProps) {
   const [selectedType, setSelectedType] = useState<ExecutorType>(
     routine.integration.executorType
   )
@@ -69,7 +68,8 @@ export function IntegrationPanel({ routine, onUpdate, onClose }: IntegrationPane
   const [enabled, setEnabled] = useState(routine.integration.enabled)
   const [schedule, setSchedule] = useState(routine.integration.schedule || '')
 
-  const handleSave = () => {
+  // Auto-save with debounce
+  const saveChanges = useCallback(() => {
     onUpdate({
       integration: {
         ...routine.integration,
@@ -79,139 +79,126 @@ export function IntegrationPanel({ routine, onUpdate, onClose }: IntegrationPane
         schedule: schedule || undefined,
       },
     })
-    onClose()
-  }
+  }, [routine.integration, selectedType, config, enabled, schedule, onUpdate])
+
+  // Debounced auto-save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveChanges()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [selectedType, config, enabled, schedule, saveChanges])
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-card border border-border rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Integration Settings</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+    <div className="p-8 md:p-12 h-full overflow-y-auto custom-scrollbar space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900">
+          <Zap className="h-5 w-5" />
         </div>
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Integration Settings</h2>
+          <p className="text-sm text-zinc-500">Configure how this routine executes automatically</p>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[60vh] space-y-6">
-          {/* Enable toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Enable Integration</p>
-              <p className="text-sm text-muted-foreground">
-                Allow this routine to be executed automatically
-              </p>
-            </div>
+      {/* Enable toggle */}
+      <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+        <div>
+          <p className="font-medium text-zinc-900 dark:text-zinc-100">Enable Integration</p>
+          <p className="text-sm text-zinc-500">
+            Allow this routine to be executed automatically
+          </p>
+        </div>
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={cn(
+            'relative w-12 h-6 rounded-full transition-colors',
+            enabled ? 'bg-indigo-500' : 'bg-zinc-300 dark:bg-zinc-600'
+          )}
+        >
+          <motion.div
+            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm"
+            animate={{ left: enabled ? '1.5rem' : '0.25rem' }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          />
+        </button>
+      </div>
+
+      {/* Executor selection */}
+      <div className="space-y-4">
+        <p className="font-medium text-zinc-900 dark:text-zinc-100">Executor Type</p>
+        <div className="grid grid-cols-2 gap-3">
+          {executorOptions.map((option) => (
             <button
-              onClick={() => setEnabled(!enabled)}
+              key={option.type}
+              onClick={() => setSelectedType(option.type)}
               className={cn(
-                'relative w-12 h-6 rounded-full transition-colors',
-                enabled ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-muted'
+                'flex items-start gap-3 p-4 rounded-xl border transition-all text-left',
+                selectedType === option.type
+                  ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10'
+                  : 'border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-600'
               )}
             >
-              <motion.div
-                className="absolute top-1 w-4 h-4 bg-white rounded-full"
-                animate={{ left: enabled ? '1.5rem' : '0.25rem' }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
+              <div
+                className={cn(
+                  'p-2 rounded-lg',
+                  selectedType === option.type
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                )}
+              >
+                {option.icon}
+              </div>
+              <div>
+                <p className="font-medium text-zinc-900 dark:text-zinc-100">{option.name}</p>
+                <p className="text-xs text-zinc-500">
+                  {option.description}
+                </p>
+              </div>
             </button>
-          </div>
-
-          {/* Executor selection */}
-          <div className="space-y-3">
-            <p className="font-medium">Executor Type</p>
-            <div className="grid grid-cols-2 gap-3">
-              {executorOptions.map((option) => (
-                <button
-                  key={option.type}
-                  onClick={() => setSelectedType(option.type)}
-                  className={cn(
-                    'flex items-start gap-3 p-3 rounded-lg border transition-all text-left',
-                    selectedType === option.type
-                      ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800'
-                      : 'border-border hover:border-zinc-400'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'p-2 rounded-lg',
-                      selectedType === option.type
-                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
-                        : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {option.icon}
-                  </div>
-                  <div>
-                    <p className="font-medium">{option.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {option.description}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Configuration based on selected executor */}
-          <div className="space-y-3">
-            <p className="font-medium">Configuration</p>
-            <ExecutorConfig
-              type={selectedType}
-              config={config}
-              onChange={setConfig}
-            />
-          </div>
-
-          {/* Schedule */}
-          <div className="space-y-2">
-            <p className="font-medium">Schedule (Optional)</p>
-            <p className="text-sm text-muted-foreground">
-              Use cron expression for automated execution
-            </p>
-            <Input
-              value={schedule}
-              onChange={(e) => setSchedule(e.target.value)}
-              placeholder="e.g., 0 9 * * * (every day at 9am)"
-            />
-          </div>
+          ))}
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-border">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            <Check className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
+      {/* Configuration based on selected executor */}
+      <div className="space-y-4">
+        <p className="font-medium text-zinc-900 dark:text-zinc-100">Configuration</p>
+        <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+          <ExecutorConfigPanel
+            type={selectedType}
+            config={config}
+            onChange={setConfig}
+          />
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+
+      {/* Schedule */}
+      <div className="space-y-3">
+        <div>
+          <p className="font-medium text-zinc-900 dark:text-zinc-100">Schedule (Optional)</p>
+          <p className="text-sm text-zinc-500">
+            Use cron expression for automated execution
+          </p>
+        </div>
+        <Input
+          value={schedule}
+          onChange={(e) => setSchedule(e.target.value)}
+          placeholder="e.g., 0 9 * * * (every day at 9am)"
+          className="bg-white dark:bg-zinc-800"
+        />
+      </div>
+    </div>
   )
 }
 
-interface ExecutorConfigProps {
+interface ExecutorConfigPanelProps {
   type: ExecutorType
   config: ExecutorConfig
   onChange: (config: ExecutorConfig) => void
 }
 
-function ExecutorConfig({ type, config, onChange }: ExecutorConfigProps) {
+function ExecutorConfigPanel({ type, config, onChange }: ExecutorConfigPanelProps) {
   switch (type) {
     case 'mcp':
       return (
@@ -232,8 +219,9 @@ function ExecutorConfig({ type, config, onChange }: ExecutorConfigProps) {
             value={config.cliCommand || 'claude -p'}
             onChange={(e) => onChange({ ...config, cliCommand: e.target.value })}
             placeholder="claude -p"
+            className="bg-white dark:bg-zinc-900"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-zinc-500">
             Command to execute. Routine content will be passed as the prompt.
           </p>
         </div>
@@ -245,10 +233,10 @@ function ExecutorConfig({ type, config, onChange }: ExecutorConfigProps) {
             value={config.pluginCode || ''}
             onChange={(e) => onChange({ ...config, pluginCode: e.target.value })}
             placeholder={`// TypeScript plugin code\nexport async function execute(routine) {\n  // Your automation logic here\n  return { success: true }\n}`}
-            className="font-mono text-sm"
+            className="font-mono text-sm bg-white dark:bg-zinc-900"
             rows={8}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-zinc-500">
             Write TypeScript code to automate this routine
           </p>
         </div>
@@ -300,7 +288,7 @@ function MCPConfig({ server, tools, onChange }: MCPConfigProps) {
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search MCP servers..."
-          className="flex-1"
+          className="flex-1 bg-white dark:bg-zinc-900"
         />
         <Button variant="outline" onClick={handleSearch} disabled={isSearching}>
           {isSearching ? (
@@ -313,8 +301,8 @@ function MCPConfig({ server, tools, onChange }: MCPConfigProps) {
 
       {/* Selected server */}
       {server && (
-        <div className="flex items-center justify-between p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg">
-          <span className="font-medium">{server}</span>
+        <div className="flex items-center justify-between p-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 rounded-lg">
+          <span className="font-medium text-indigo-700 dark:text-indigo-300">{server}</span>
           <Button
             variant="ghost"
             size="sm"
@@ -333,7 +321,7 @@ function MCPConfig({ server, tools, onChange }: MCPConfigProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border border-border rounded-lg overflow-hidden"
+            className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden"
           >
             <div className="max-h-48 overflow-y-auto">
               {results.map((result) => (
@@ -344,16 +332,16 @@ function MCPConfig({ server, tools, onChange }: MCPConfigProps) {
                     setResults([])
                     setSearch('')
                   }}
-                  className="w-full flex items-start gap-2 p-3 hover:bg-muted transition-colors text-left border-b border-border last:border-0"
+                  className="w-full flex items-start gap-2 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left border-b border-zinc-200 dark:border-zinc-700 last:border-0"
                 >
-                  <Globe className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <Globe className="h-4 w-4 mt-0.5 text-zinc-400" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{result.name}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
+                    <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">{result.name}</p>
+                    <p className="text-xs text-zinc-500 line-clamp-2">
                       {result.description}
                     </p>
                   </div>
-                  <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                  <ExternalLink className="h-3 w-3 text-zinc-400" />
                 </button>
               ))}
             </div>
@@ -364,18 +352,18 @@ function MCPConfig({ server, tools, onChange }: MCPConfigProps) {
       {/* Selected tools */}
       {tools.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Available tools:</p>
+          <p className="text-xs text-zinc-500">Available tools:</p>
           <div className="flex flex-wrap gap-1">
             {tools.slice(0, 5).map((tool) => (
               <span
                 key={tool}
-                className="text-xs bg-muted px-2 py-0.5 rounded"
+                className="text-xs bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded"
               >
                 {tool}
               </span>
             ))}
             {tools.length > 5 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-zinc-500">
                 +{tools.length - 5} more
               </span>
             )}
@@ -419,15 +407,15 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
     <div className="space-y-4">
       {/* Repository Input */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Repository</label>
+        <label className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Repository</label>
         <div className="flex gap-2">
           <Input
             value={config.githubRepo || ''}
             onChange={(e) => onChange({ ...config, githubRepo: e.target.value })}
             placeholder="owner/repository"
             className={cn(
-              'flex-1',
-              config.githubRepo && !isValidRepo && 'border-destructive'
+              'flex-1 bg-white dark:bg-zinc-900',
+              config.githubRepo && !isValidRepo && 'border-red-500'
             )}
           />
           {config.githubRepo && isValidRepo && (
@@ -448,7 +436,7 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
           )}
         </div>
         {config.githubRepo && !isValidRepo && (
-          <p className="text-xs text-destructive flex items-center gap-1">
+          <p className="text-xs text-red-500 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
             Format must be: owner/repository
           </p>
@@ -456,11 +444,11 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
       </div>
 
       {/* Setup Instructions */}
-      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+      <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 p-3 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Github className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Workflow Setup</span>
+            <Github className="h-4 w-4 text-zinc-500" />
+            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Workflow Setup</span>
           </div>
           <Button
             variant="outline"
@@ -482,16 +470,16 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-zinc-500">
           Add this workflow to your repository at:
         </p>
-        <code className="block text-xs bg-background px-2 py-1 rounded border border-border">
+        <code className="block text-xs bg-white dark:bg-zinc-900 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700">
           .github/workflows/{GITHUB_WORKFLOW_FILENAME}
         </code>
 
         <button
           onClick={() => setShowWorkflow(!showWorkflow)}
-          className="text-xs text-zinc-600 dark:text-zinc-400 hover:underline"
+          className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           {showWorkflow ? 'Hide workflow' : 'Show workflow'}
         </button>
@@ -502,7 +490,7 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="text-xs bg-background p-2 rounded border border-border overflow-x-auto"
+              className="text-xs bg-white dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-700 overflow-x-auto"
             >
               {GITHUB_WORKFLOW_TEMPLATE}
             </motion.pre>
@@ -512,8 +500,8 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
 
       {/* Requirements */}
       <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">Requirements:</p>
-        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+        <p className="text-xs font-medium text-zinc-500">Requirements:</p>
+        <ul className="text-xs text-zinc-500 space-y-1 list-disc list-inside">
           <li>GITHUB_TOKEN set in your environment</li>
           <li>ANTHROPIC_API_KEY in repository secrets</li>
           <li>Repository has Issues enabled</li>
@@ -525,7 +513,7 @@ function GitHubActionConfig({ config, onChange }: GitHubActionConfigProps) {
         href="https://github.com/anthropics/claude-code-action"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:underline"
+        className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
       >
         <ExternalLink className="h-3 w-3" />
         View claude-code-action documentation

@@ -128,6 +128,13 @@ export interface Routine {
   updatedAt: string
 }
 
+// AI Tool call information
+export interface ToolCallInfo {
+  id: string
+  name: string
+  input: Record<string, unknown>
+}
+
 // Chat message for AI assistant
 export interface ChatMessage {
   id: string
@@ -135,6 +142,7 @@ export interface ChatMessage {
   content: string
   timestamp: string
   suggestedBlocks?: ContentBlock[]
+  toolCalls?: ToolCallInfo[]
 }
 
 // MCP Server from registry
