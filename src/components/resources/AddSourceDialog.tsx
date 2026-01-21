@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Link, FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import type { ResourceSource, ResourceType } from '@/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AddSourceDialogProps {
   open: boolean
@@ -25,6 +26,7 @@ type SourceMode = 'url' | 'text'
 type FetchStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialogProps) {
+  const { t } = useTranslation()
   const [mode, setMode] = useState<SourceMode>('url')
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
@@ -149,7 +151,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg" onKeyDown={handleKeyDown}>
         <DialogHeader>
-          <DialogTitle>Add Source</DialogTitle>
+          <DialogTitle>{t('addSource.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -166,7 +168,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               )}
             >
               <Link className="h-4 w-4" />
-              <span className="text-sm font-medium">URL</span>
+              <span className="text-sm font-medium">{t('addSource.url')}</span>
             </button>
             <button
               type="button"
@@ -179,7 +181,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               )}
             >
               <FileText className="h-4 w-4" />
-              <span className="text-sm font-medium">Text</span>
+              <span className="text-sm font-medium">{t('addSource.text')}</span>
             </button>
           </div>
 
@@ -187,7 +189,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
           {mode === 'url' && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">URL</label>
+                <label className="text-sm font-medium">{t('addSource.urlLabel')}</label>
                 <div className="relative">
                   <Input
                     value={url}
@@ -210,7 +212,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
                   </div>
                 </div>
                 {fetchStatus === 'loading' && (
-                  <p className="text-xs text-muted-foreground">Fetching content...</p>
+                  <p className="text-xs text-muted-foreground">{t('addSource.fetchingContent')}</p>
                 )}
                 {error && (
                   <p className="text-xs text-amber-600">{error}</p>
@@ -218,11 +220,11 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Title</label>
+                <label className="text-sm font-medium">{t('addSource.titleLabel')}</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Source title"
+                  placeholder={t('addSource.sourceTitle')}
                 />
               </div>
 
@@ -230,7 +232,7 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
               {content && (
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-muted-foreground">
-                    Preview ({content.split(/\s+/).length.toLocaleString()} words)
+                    {t('addSource.preview')} ({content.split(/\s+/).length.toLocaleString()} {t('sources.words')})
                   </label>
                   <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg max-h-32 overflow-y-auto">
                     {content.slice(0, 500)}
@@ -247,26 +249,26 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
           {mode === 'text' && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Title</label>
+                <label className="text-sm font-medium">{t('addSource.titleLabel')}</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Source title"
+                  placeholder={t('addSource.sourceTitle')}
                   autoFocus
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Content</label>
+                <label className="text-sm font-medium">{t('addSource.contentLabel')}</label>
                 <Textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Paste or type your source content here..."
+                  placeholder={t('addSource.pasteOrType')}
                   rows={8}
                   className="resize-none"
                 />
                 {content && (
                   <p className="text-xs text-muted-foreground">
-                    {content.split(/\s+/).length.toLocaleString()} words
+                    {content.split(/\s+/).length.toLocaleString()} {t('sources.words')}
                   </p>
                 )}
               </div>
@@ -276,15 +278,15 @@ export function AddSourceDialog({ open, onOpenChange, onSubmit }: AddSourceDialo
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('button.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Add Source
+            {t('sources.addSource')}
           </Button>
         </DialogFooter>
 
         <p className="text-xs text-center text-muted-foreground">
-          Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px]">⌘</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px]">Enter</kbd> to add
+          {t('addSource.pressToAdd')} <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px]">⌘</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px]">Enter</kbd> {t('addSource.toAdd')}
         </p>
       </DialogContent>
     </Dialog>

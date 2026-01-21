@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Sparkles, MessageCircle, X, Send, FolderPlus, Target, ListChecks, Loader2 } from 'lucide-react'
 import { useCategories, useGoals, useRoutines } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
@@ -52,6 +53,9 @@ export default function Home() {
   const [isAddRoutineOpen, setIsAddRoutineOpen] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
   const [layoutType, setLayoutType] = useState<LayoutType>('scroll')
+
+  // Translation
+  const { t } = useTranslation()
 
   // AI Chat state
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -156,7 +160,7 @@ export default function Home() {
   if (categoriesLoading || goalsLoading || routinesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">{t('app.loading')}</div>
       </div>
     )
   }
@@ -172,7 +176,7 @@ export default function Home() {
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Routine Manager
+                {t('app.title')}
               </h1>
             </div>
             <div className="flex items-center gap-2">
@@ -186,7 +190,7 @@ export default function Home() {
                   className="gap-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Category</span>
+                  <span className="hidden sm:inline">{t('button.category')}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -194,7 +198,7 @@ export default function Home() {
                   className="gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/20"
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Goal</span>
+                  <span className="hidden sm:inline">{t('button.goal')}</span>
                 </Button>
               </div>
             </div>
@@ -214,10 +218,10 @@ export default function Home() {
               <Sparkles className="h-12 w-12 text-primary" />
             </div>
             <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Welcome to Routine Manager
+              {t('app.welcome')}
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-md">
-              Create categories to organize your goals and routines.
+              {t('app.welcome.desc')}
             </p>
             <Button
               onClick={() => setIsAddCategoryOpen(true)}
@@ -225,7 +229,7 @@ export default function Home() {
               className="gap-2 rounded-xl"
             >
               <Plus className="h-5 w-5" />
-              Create Your First Category
+              {t('app.createFirstCategory')}
             </Button>
           </motion.div>
         ) : (
@@ -277,10 +281,10 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-zinc-300 dark:text-zinc-700 group-hover:text-zinc-500 transition-colors">
-                    Add New Category
+                    {t('app.addCategory')}
                   </h2>
                   <p className="text-sm text-zinc-300 dark:text-zinc-700">
-                    Click to create a new category
+                    {t('app.addCategory.desc')}
                   </p>
                 </div>
               </div>
@@ -335,7 +339,7 @@ export default function Home() {
 
           <span className="relative flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            <span className="font-medium text-sm">AIに相談</span>
+            <span className="font-medium text-sm">{t('ai.button')}</span>
           </span>
           <MessageCircle className="h-5 w-5 relative" />
         </motion.button>
@@ -369,8 +373,8 @@ export default function Home() {
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-semibold text-zinc-900 dark:text-white">AI Assistant</h2>
-                    <p className="text-xs text-zinc-500">Help with categories, goals & routines</p>
+                    <h2 className="font-semibold text-zinc-900 dark:text-white">{t('ai.title')}</h2>
+                    <p className="text-xs text-zinc-500">{t('ai.subtitle')}</p>
                   </div>
                 </div>
                 <button
@@ -389,10 +393,10 @@ export default function Home() {
                       <Sparkles className="h-8 w-8 text-indigo-500" />
                     </div>
                     <h3 className="font-semibold text-zinc-900 dark:text-white mb-2">
-                      How can I help?
+                      {t('ai.howCanIHelp')}
                     </h3>
                     <p className="text-sm text-zinc-500 mb-6">
-                      Ask me for ideas about categories, goals, or routines to add.
+                      {t('ai.askForIdeas')}
                     </p>
                   </div>
                 ) : (
@@ -413,7 +417,7 @@ export default function Home() {
                 {isChatLoading && (
                   <div className="flex items-center gap-2 text-zinc-500">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Thinking...</span>
+                    <span className="text-sm">{t('ai.thinking')}</span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -428,7 +432,7 @@ export default function Home() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-600 text-zinc-600 dark:text-zinc-400 transition-colors disabled:opacity-50"
                   >
                     <FolderPlus className="h-3.5 w-3.5" />
-                    Category idea
+                    {t('ai.categoryIdea')}
                   </button>
                   <button
                     onClick={() => handleQuickAction('Suggest goals I could add to organize my routines better')}
@@ -436,7 +440,7 @@ export default function Home() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-purple-300 dark:hover:border-purple-600 text-zinc-600 dark:text-zinc-400 transition-colors disabled:opacity-50"
                   >
                     <Target className="h-3.5 w-3.5" />
-                    Goal idea
+                    {t('ai.goalIdea')}
                   </button>
                   <button
                     onClick={() => handleQuickAction('Suggest a daily routine I could create')}
@@ -444,7 +448,7 @@ export default function Home() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-pink-300 dark:hover:border-pink-600 text-zinc-600 dark:text-zinc-400 transition-colors disabled:opacity-50"
                   >
                     <ListChecks className="h-3.5 w-3.5" />
-                    Routine idea
+                    {t('ai.routineIdea')}
                   </button>
                 </div>
               </div>
@@ -456,7 +460,7 @@ export default function Home() {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSend()}
-                    placeholder="Ask AI for help..."
+                    placeholder={t('ai.placeholder')}
                     className="pr-12 rounded-xl border-zinc-200 dark:border-zinc-700 focus-visible:ring-indigo-500/30"
                     disabled={isChatLoading}
                   />

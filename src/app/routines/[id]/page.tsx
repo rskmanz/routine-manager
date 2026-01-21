@@ -29,6 +29,7 @@ import {
 import { useRoutine, useGoals, useRoutines, useCategories } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
 import { useExecutor } from '@/hooks/useExecutor'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -52,10 +53,10 @@ const iconMap: Record<string, React.ReactNode> = {
 
 // Quick action definitions for AI chat
 const quickActions = [
-  { label: 'Checklist', icon: ListChecks, prompt: 'Create a checklist for this routine' },
-  { label: 'Steps', icon: Lightbulb, prompt: 'Suggest step-by-step instructions' },
-  { label: 'Improve', icon: Wand2, prompt: 'Improve and refine this routine' },
-  { label: 'Triggers', icon: Zap, prompt: 'Suggest automation triggers' },
+  { key: 'checklist', labelKey: 'quick.checklist', icon: ListChecks, prompt: 'Create a checklist for this routine' },
+  { key: 'steps', labelKey: 'quick.steps', icon: Lightbulb, prompt: 'Suggest step-by-step instructions' },
+  { key: 'improve', labelKey: 'quick.improve', icon: Wand2, prompt: 'Improve and refine this routine' },
+  { key: 'triggers', labelKey: 'quick.triggers', icon: Zap, prompt: 'Suggest automation triggers' },
 ]
 
 export default function RoutineEditorPage({ params }: PageProps) {
@@ -66,6 +67,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
   const { goals } = useGoals()
   const { routines: allRoutines } = useRoutines()
   const { execute, isExecuting } = useExecutor()
+  const { t } = useTranslation()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -223,7 +225,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">{t('app.loading')}</div>
       </div>
     )
   }
@@ -231,8 +233,8 @@ export default function RoutineEditorPage({ params }: PageProps) {
   if (!routine) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-muted-foreground mb-4">Routine not found</p>
-        <Button onClick={() => router.push('/')}>Go Home</Button>
+        <p className="text-muted-foreground mb-4">{t('editor.routineNotFound')}</p>
+        <Button onClick={() => router.push('/')}>{t('editor.goHome')}</Button>
       </div>
     )
   }
@@ -282,7 +284,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
               className="gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg hidden sm:flex"
             >
               <Save className="h-4 w-4" />
-              Save
+              {t('button.save')}
             </Button>
             <Button
               variant="ghost"
@@ -291,7 +293,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
               className="gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg"
             >
               <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Settings</span>
+              <span className="hidden sm:inline">{t('button.settings')}</span>
             </Button>
             <Button
               size="sm"
@@ -304,7 +306,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
               ) : (
                 <Play className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Run</span>
+              <span className="hidden sm:inline">{t('button.run')}</span>
             </Button>
           </div>
         </header>
@@ -318,7 +320,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
           <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-4">
             <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-4 px-2">
               <Folder className="h-4 w-4" />
-              <span className="font-semibold text-xs uppercase tracking-wider">Explorer</span>
+              <span className="font-semibold text-xs uppercase tracking-wider">{t('editor.explorer')}</span>
             </div>
             <nav className="space-y-1">
               {categories.map((category) => (
@@ -394,7 +396,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
               )}
             >
-              Editor
+              {t('editor.title')}
             </button>
             <button
               onClick={() => setActiveTab('sources')}
@@ -405,7 +407,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
               )}
             >
-              Sources
+              {t('editor.sources')}
               {sources.length > 0 && <span className="bg-zinc-200 dark:bg-zinc-700 px-1.5 rounded-full text-[10px]">{sources.length}</span>}
             </button>
           </div>
@@ -417,7 +419,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   onBlur={handleSave}
-                  placeholder={`# Routine Title\n\nWrite your routine steps here...`}
+                  placeholder={t('editor.placeholder')}
                   className="w-full h-full min-h-[500px] text-lg leading-relaxed resize-none border-0 focus-visible:ring-0 bg-transparent p-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 selection:bg-indigo-100 dark:selection:bg-indigo-900/30 font-serif md:font-sans"
                   spellCheck={false}
                 />
@@ -442,13 +444,13 @@ export default function RoutineEditorPage({ params }: PageProps) {
               <div className="p-1.5 bg-indigo-500/10 rounded-lg">
                 <Sparkles className="h-4 w-4 text-indigo-500" />
               </div>
-              <h2 className="font-semibold text-sm">AI Assistant</h2>
+              <h2 className="font-semibold text-sm">{t('ai.title')}</h2>
             </div>
 
             <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
               {messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-zinc-500">Ask me anything about this routine.</p>
+                  <p className="text-sm text-zinc-500">{t('ai.askAnything')}</p>
                 </div>
               ) : (
                 messages.map((msg) => (
@@ -467,7 +469,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   const Icon = action.icon
                   return (
                     <button
-                      key={action.label}
+                      key={action.key}
                       onClick={async () => {
                         setChatInput(action.prompt)
                         await sendMessage(action.prompt)
@@ -476,7 +478,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                       className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 transition-colors disabled:opacity-50"
                     >
                       <Icon className="h-3 w-3" />
-                      {action.label}
+                      {t(action.labelKey as any)}
                     </button>
                   )
                 })}
@@ -490,7 +492,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleChatSend()}
-                  placeholder="Ask AI..."
+                  placeholder={t('ai.placeholder')}
                   className="pr-10 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 focus-visible:ring-indigo-500/30 rounded-xl shadow-sm"
                 />
                 <Button size="icon" onClick={handleChatSend} disabled={isChatLoading} className="absolute right-1 top-1 h-8 w-8 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700"><Send className="h-4 w-4" /></Button>

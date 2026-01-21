@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { ResourceSource, ResourceType } from '@/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 import { AddSourceDialog } from './AddSourceDialog'
 
 interface SourcesPanelProps {
@@ -24,10 +25,10 @@ interface SourcesPanelProps {
   className?: string
 }
 
-const typeConfig: Record<ResourceType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string; label: string }> = {
-  url: { icon: Link, color: 'text-blue-600', bg: 'bg-blue-50', label: 'Web' },
-  text: { icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Text' },
-  file: { icon: Upload, color: 'text-amber-600', bg: 'bg-amber-50', label: 'File' },
+const typeConfig: Record<ResourceType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string; labelKey: string }> = {
+  url: { icon: Link, color: 'text-blue-600', bg: 'bg-blue-50', labelKey: 'type.web' },
+  text: { icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', labelKey: 'type.text' },
+  file: { icon: Upload, color: 'text-amber-600', bg: 'bg-amber-50', labelKey: 'type.file' },
 }
 
 export function SourcesPanel({
@@ -37,26 +38,27 @@ export function SourcesPanel({
   className,
 }: SourcesPanelProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const { t } = useTranslation()
 
   return (
     <div className={cn('space-y-6', className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Sources</h2>
+          <h2 className="text-lg font-semibold">{t('sources.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            Add reference materials for AI to use
+            {t('sources.emptyDesc')}
           </p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Source
+          {t('sources.addSource')}
         </Button>
       </div>
 
       {/* Sources Grid or Empty State */}
       {sources.length === 0 ? (
-        <EmptyState onAdd={() => setIsAddDialogOpen(true)} />
+        <EmptyState onAdd={() => setIsAddDialogOpen(true)} t={t} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
@@ -65,6 +67,7 @@ export function SourcesPanel({
                 key={source.id}
                 source={source}
                 onRemove={() => onRemoveSource(source.id)}
+                t={t}
               />
             ))}
           </AnimatePresence>
@@ -74,10 +77,10 @@ export function SourcesPanel({
       {/* Stats */}
       {sources.length > 0 && (
         <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 border-t">
-          <span>{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
+          <span>{sources.length} {sources.length !== 1 ? t('sources.sources') : t('sources.source')}</span>
           <span>•</span>
           <span>
-            {sources.reduce((acc, s) => acc + (s.content?.length || 0), 0).toLocaleString()} characters
+            {sources.reduce((acc, s) => acc + (s.content?.length || 0), 0).toLocaleString()} {t('sources.characters')}
           </span>
         </div>
       )}
@@ -92,7 +95,7 @@ export function SourcesPanel({
   )
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onAdd, t }: { onAdd: () => void; t: (key: any) => string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -102,23 +105,23 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <div className="rounded-full bg-primary/10 p-4 mb-4">
         <BookOpen className="h-8 w-8 text-primary" />
       </div>
-      <h3 className="font-semibold text-lg mb-2">No sources yet</h3>
+      <h3 className="font-semibold text-lg mb-2">{t('sources.empty')}</h3>
       <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
-        Add URLs, articles, or text that you want the AI to reference when helping with this routine.
+        {t('sources.emptyDesc')}
       </p>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button onClick={onAdd} className="gap-2">
           <Link className="h-4 w-4" />
-          Add URL
+          {t('dialog.addUrl')}
         </Button>
         <Button variant="outline" onClick={onAdd} className="gap-2">
           <FileText className="h-4 w-4" />
-          Paste Text
+          {t('dialog.pasteText')}
         </Button>
       </div>
       <div className="flex items-center gap-2 mt-6 text-xs text-muted-foreground">
         <Sparkles className="h-3.5 w-3.5" />
-        <span>AI will use these sources to provide better suggestions</span>
+        <span>{t('sources.aiWillUse')}</span>
       </div>
     </motion.div>
   )
@@ -127,9 +130,10 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 interface SourceCardProps {
   source: ResourceSource
   onRemove: () => void
+  t: (key: any) => string
 }
 
-function SourceCard({ source, onRemove }: SourceCardProps) {
+function SourceCard({ source, onRemove, t }: SourceCardProps) {
   const config = typeConfig[source.type]
   const Icon = config.icon
   const wordCount = source.content ? source.content.split(/\s+/).length : 0
@@ -150,7 +154,7 @@ function SourceCard({ source, onRemove }: SourceCardProps) {
     >
       {/* Type Badge */}
       <div className={cn('absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-medium', config.bg, config.color)}>
-        {config.label}
+        {t(config.labelKey)}
       </div>
 
       {/* Content */}
@@ -182,14 +186,14 @@ function SourceCard({ source, onRemove }: SourceCardProps) {
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-border">
           <span className="text-xs text-muted-foreground">
-            {wordCount > 0 ? `${wordCount.toLocaleString()} words` : 'No content'}
+            {wordCount > 0 ? `${wordCount.toLocaleString()} ${t('sources.words')}` : t('sources.noContent')}
           </span>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             {source.url && (
               <button
                 onClick={handleClick}
                 className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                title="Open URL"
+                title={t('sources.openUrl')}
               >
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
@@ -197,7 +201,7 @@ function SourceCard({ source, onRemove }: SourceCardProps) {
             <button
               onClick={onRemove}
               className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
-              title="Remove source"
+              title={t('sources.removeSource')}
             >
               <Trash2 className="h-3.5 w-3.5 text-destructive" />
             </button>
