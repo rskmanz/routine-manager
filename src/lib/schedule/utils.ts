@@ -196,3 +196,78 @@ export function getDayAbbreviation(dayOfWeek: DayOfWeek, locale: string = 'en'):
   }
   return abbreviations[locale]?.[dayOfWeek] || abbreviations.en[dayOfWeek]
 }
+
+/**
+ * Get the first day of a month
+ */
+export function getMonthStart(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+/**
+ * Get the last day of a month
+ */
+export function getMonthEnd(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+/**
+ * Get all calendar days for a month view (includes padding days from prev/next month)
+ */
+export function getCalendarDays(year: number, month: number): Date[] {
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+
+  const days: Date[] = []
+
+  // Add padding days from previous month
+  const startDayOfWeek = firstDay.getDay()
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    const date = new Date(year, month, -i)
+    days.push(date)
+  }
+
+  // Add all days of current month
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    days.push(new Date(year, month, day))
+  }
+
+  // Add padding days from next month to complete the grid (6 rows = 42 days)
+  const remainingDays = 42 - days.length
+  for (let i = 1; i <= remainingDays; i++) {
+    days.push(new Date(year, month + 1, i))
+  }
+
+  return days
+}
+
+/**
+ * Format month and year for display
+ */
+export function formatMonthYear(date: Date, locale: string = 'en'): string {
+  return date.toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+/**
+ * Check if two dates are the same day
+ */
+export function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  )
+}
+
+/**
+ * Check if a date is in the current month
+ */
+export function isCurrentMonth(date: Date, referenceDate: Date): boolean {
+  return (
+    date.getMonth() === referenceDate.getMonth() &&
+    date.getFullYear() === referenceDate.getFullYear()
+  )
+}

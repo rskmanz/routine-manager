@@ -144,6 +144,17 @@ export default function Home() {
     setEditingCategory(null)
   }
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setIsAddCategoryOpen(true)
+  }
+
+  const handleDeleteCategory = (id: string) => {
+    if (confirm('Are you sure you want to delete this category and all its goals/routines?')) {
+      deleteCategory(id)
+    }
+  }
+
   const handleAddGoal = (categoryId: string) => {
     setSelectedCategoryId(categoryId)
     setEditingGoal(null)
@@ -204,7 +215,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-zinc-950 dark:via-black dark:to-zinc-900">
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
 
         {/* Integrated Toolbar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -279,6 +290,9 @@ export default function Home() {
                 routines={routines}
                 onAddGoal={handleAddGoal}
                 onEditGoal={handleEditGoal}
+                onDeleteGoal={handleDeleteGoal}
+                onEditCategory={handleEditCategory}
+                onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
               />
@@ -290,6 +304,9 @@ export default function Home() {
                 routines={routines}
                 onAddGoal={handleAddGoal}
                 onEditGoal={handleEditGoal}
+                onDeleteGoal={handleDeleteGoal}
+                onEditCategory={handleEditCategory}
+                onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
               />
@@ -301,6 +318,9 @@ export default function Home() {
                 routines={routines}
                 onAddGoal={handleAddGoal}
                 onEditGoal={handleEditGoal}
+                onDeleteGoal={handleDeleteGoal}
+                onEditCategory={handleEditCategory}
+                onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
               />

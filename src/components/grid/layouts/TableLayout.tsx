@@ -6,10 +6,18 @@ import {
   Plus, Play, Pause, MoreHorizontal, Briefcase, User, Heart, Folder, ChevronRight,
   Book, Code, Music, Gamepad2, Plane, DollarSign, Home, Car, Dumbbell, Coffee,
   Camera, Palette, Lightbulb, Target, Star, Zap, Globe, Headphones, ShoppingBag,
-  Utensils, GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame
+  Utensils, GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame,
+  Edit2, Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { LayoutProps } from './types'
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -57,6 +65,9 @@ export function TableLayout({
   routines,
   onAddGoal,
   onEditGoal,
+  onDeleteGoal,
+  onEditCategory,
+  onDeleteCategory,
   onAddRoutine,
   onEditRoutine,
 }: LayoutProps) {
@@ -94,6 +105,27 @@ export function TableLayout({
               <Plus className="w-4 h-4" />
               Add Goal
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                  <MoreHorizontal className="w-5 h-5 text-zinc-500" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEditCategory(category)}>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDeleteCategory(category.id)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Table Container */}
@@ -171,15 +203,30 @@ export function TableLayout({
                           <Plus className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Routine</span>
                         </Button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onEditGoal(goal)
-                          }}
-                          className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-zinc-500" />
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-zinc-500" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEditGoal(goal)}>
+                              <Edit2 className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => onDeleteGoal(goal.id)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
 

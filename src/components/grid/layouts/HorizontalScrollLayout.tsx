@@ -6,10 +6,18 @@ import {
   Plus, MoreHorizontal, Play, Briefcase, User, Heart, Folder, Book, Code, Music,
   Gamepad2, Plane, DollarSign, Home, Car, Dumbbell, Coffee, Camera, Palette,
   Lightbulb, Target, Star, Zap, Globe, Headphones, ShoppingBag, Utensils,
-  GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame
+  GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame,
+  Edit2, Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { LayoutProps } from './types'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const iconMap: Record<string, React.ReactNode> = {
   Briefcase: <Briefcase className="w-5 h-5" />,
@@ -50,6 +58,9 @@ export function HorizontalScrollLayout({
   routines,
   onAddGoal,
   onEditGoal,
+  onDeleteGoal,
+  onEditCategory,
+  onDeleteCategory,
   onAddRoutine,
   onEditRoutine,
 }: LayoutProps) {
@@ -70,7 +81,7 @@ export function HorizontalScrollLayout({
             <div className="p-3 rounded-2xl bg-white/50 dark:bg-white/5 backdrop-blur-md shadow-sm border border-white/20 dark:border-white/10 text-zinc-700 dark:text-zinc-200">
               {iconMap[category.icon] || <Folder className="w-5 h-5" />}
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="text-2xl font-bold text-zinc-800 dark:text-white">
                 {category.title}
               </h2>
@@ -78,6 +89,27 @@ export function HorizontalScrollLayout({
                 Manage your {category.title.toLowerCase()} goals
               </p>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                  <MoreHorizontal className="w-5 h-5 text-zinc-500" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEditCategory(category)}>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDeleteCategory(category.id)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Horizontal Scroll Container */}
@@ -90,7 +122,7 @@ export function HorizontalScrollLayout({
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="snap-center flex-shrink-0 w-80 md:w-96 rounded-[2rem] bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group/card"
+                  className="snap-center flex-shrink-0 w-72 sm:w-80 md:w-96 rounded-[2rem] bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group/card"
                 >
                   {/* Glass Gradient Background */}
                   <div
@@ -101,7 +133,7 @@ export function HorizontalScrollLayout({
                   />
 
                   {/* Content */}
-                  <div className="relative p-6 flex flex-col h-full min-h-[320px]">
+                  <div className="relative p-4 sm:p-6 flex flex-col h-full min-h-[240px] sm:min-h-[320px]">
                     {/* Card Header */}
                     <div className="flex justify-between items-start mb-6">
                       <div>
@@ -119,12 +151,27 @@ export function HorizontalScrollLayout({
                           </p>
                         )}
                       </div>
-                      <button
-                        onClick={() => onEditGoal(goal)}
-                        className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        <MoreHorizontal className="w-5 h-5 text-zinc-500" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                            <MoreHorizontal className="w-5 h-5 text-zinc-500" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onEditGoal(goal)}>
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => onDeleteGoal(goal.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     {/* Routines List */}
@@ -177,7 +224,7 @@ export function HorizontalScrollLayout({
               {/* Add Goal Placeholder */}
               <div
                 onClick={() => onAddGoal(category.id)}
-                className="snap-center flex-shrink-0 w-24 md:w-32 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white/30 dark:hover:bg-white/5 transition-all min-h-[320px]"
+                className="snap-center flex-shrink-0 w-20 sm:w-24 md:w-32 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white/30 dark:hover:bg-white/5 transition-all min-h-[240px] sm:min-h-[320px]"
               >
                 <Plus className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
               </div>

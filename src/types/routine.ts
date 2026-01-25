@@ -114,6 +114,15 @@ export interface StreakInfo {
   totalCompletions: number
 }
 
+// Task item within a routine
+export interface RoutineTask {
+  id: string
+  title: string
+  completed: boolean
+  createdAt: string
+  completedAt?: string
+}
+
 // Main Routine interface
 export interface Routine {
   id: string
@@ -121,6 +130,7 @@ export interface Routine {
   goalId: string
   blocks: ContentBlock[]
   sources?: ResourceSource[]  // NotebookLM-style sources
+  tasks?: RoutineTask[]       // Todo-style task list
   integration: RoutineIntegration
   schedule?: RoutineSchedule  // Recurring schedule for completion tracking
   status: RoutineStatus

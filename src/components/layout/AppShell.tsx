@@ -16,7 +16,7 @@ export function AppShell({ children }: AppShellProps) {
         <LeftSidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 pl-14">
+        <main className="flex-1 pl-0 md:pl-20">
           {children}
         </main>
       </div>

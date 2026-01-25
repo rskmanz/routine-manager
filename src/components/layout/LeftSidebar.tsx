@@ -29,7 +29,7 @@ export function LeftSidebar() {
     <motion.aside
       initial={{ x: -56, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="fixed left-0 top-0 z-50 flex h-screen w-20 flex-col items-center border-r border-border bg-background/95 backdrop-blur-sm py-4"
+      className="fixed left-0 top-0 z-50 hidden md:flex h-screen w-20 flex-col items-center border-r border-border bg-background/95 backdrop-blur-sm py-4"
     >
       {/* User Icon */}
       <div className="mb-6">

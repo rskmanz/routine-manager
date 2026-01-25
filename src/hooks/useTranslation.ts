@@ -100,6 +100,12 @@ const translations = {
     // Schedule View
     'schedule.title': 'Schedule & Progress',
     'schedule.today': 'Today',
+    'schedule.day': 'Day',
+    'schedule.week': 'Week',
+    'schedule.list': 'List',
+    'schedule.board': 'Board',
+    'schedule.pending': 'Pending',
+    'schedule.inProgress': 'In Progress',
     'schedule.thisWeek': 'This Week',
     'schedule.thisMonth': 'This Month',
     'schedule.todayRoutines': "Today's Routines",
@@ -111,6 +117,11 @@ const translations = {
     'schedule.markComplete': 'Mark complete',
     'schedule.upcoming': 'Upcoming',
     'schedule.weekOverview': 'Week Overview',
+    'schedule.month': 'Month',
+    'schedule.groupBy': 'Group',
+    'schedule.goal': 'Goal',
+    'schedule.category': 'Category',
+    'schedule.noRoutinesOnDate': 'No routines scheduled for this day',
 
     // Schedule Config
     'scheduleConfig.title': 'Schedule Settings',
@@ -223,6 +234,12 @@ const translations = {
     // Schedule View
     'schedule.title': 'スケジュール・進捗',
     'schedule.today': '今日',
+    'schedule.day': '日',
+    'schedule.week': '週',
+    'schedule.list': 'リスト',
+    'schedule.board': 'ボード',
+    'schedule.pending': '未完了',
+    'schedule.inProgress': '進行中',
     'schedule.thisWeek': '今週',
     'schedule.thisMonth': '今月',
     'schedule.todayRoutines': '今日のルーティン',
@@ -234,6 +251,11 @@ const translations = {
     'schedule.markComplete': '完了にする',
     'schedule.upcoming': '予定',
     'schedule.weekOverview': '週間概要',
+    'schedule.month': '月',
+    'schedule.groupBy': 'グループ',
+    'schedule.goal': 'ゴール',
+    'schedule.category': 'カテゴリ',
+    'schedule.noRoutinesOnDate': 'この日にスケジュールされたルーティンはありません',
 
     // Schedule Config
     'scheduleConfig.title': 'スケジュール設定',

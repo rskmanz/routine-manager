@@ -27,6 +27,8 @@ import {
   Zap,
   Calendar,
   Check,
+  Menu,
+  X,
 } from 'lucide-react'
 import { useRoutine, useGoals, useRoutines, useCategories } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
@@ -43,11 +45,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { IntegrationPanel, IntegrationTabContent } from '@/components/editor'
+import { IntegrationPanel, IntegrationTabContent, TasksPanel } from '@/components/editor'
 import { SourcesPanel } from '@/components/resources'
 import { SchedulePanel } from '@/components/schedule/SchedulePanel'
 import { useCompletions } from '@/hooks/useCompletions'
-import type { ResourceSource, RoutineSchedule } from '@/types'
+import type { ResourceSource, RoutineSchedule, RoutineTask } from '@/types'
 import { cn } from '@/lib/utils'
 import { generateId } from '@/lib/utils'
 
@@ -85,11 +87,13 @@ export default function RoutineEditorPage({ params }: PageProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [sources, setSources] = useState<ResourceSource[]>([])
+  const [tasks, setTasks] = useState<RoutineTask[]>([])
   const [isIntegrationOpen, setIsIntegrationOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
-  const [activeTab, setActiveTab] = useState<'editor' | 'sources' | 'schedule' | 'integration'>('editor')
+  const [activeTab, setActiveTab] = useState<'editor' | 'sources' | 'schedule' | 'tasks' | 'integration'>('editor')
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Auto-expand the category and goal that contains the current routine
@@ -163,8 +167,9 @@ export default function RoutineEditorPage({ params }: PageProps) {
         })
         .join('\n\n')
       setContent(textContent)
-      // Initialize sources from routine
+      // Initialize sources and tasks from routine
       setSources(routine.sources || [])
+      setTasks(routine.tasks || [])
     }
   }, [routine])
 
@@ -184,6 +189,12 @@ export default function RoutineEditorPage({ params }: PageProps) {
     setSources(newSources)
     // Save immediately
     updateRoutine({ sources: newSources })
+  }
+
+  const handleTasksChange = (newTasks: RoutineTask[]) => {
+    setTasks(newTasks)
+    // Save immediately
+    updateRoutine({ tasks: newTasks })
   }
 
   const handleSave = () => {
@@ -267,7 +278,7 @@ export default function RoutineEditorPage({ params }: PageProps) {
       </div>
 
       {/* Main Page Layout */}
-      <div className="relative z-10 max-w-[1400px] mx-auto w-full px-4 flex flex-col h-[calc(100vh-2rem)] my-4">
+      <div className="relative z-10 max-w-[1400px] mx-auto w-full px-2 sm:px-4 flex flex-col h-[calc(100vh-2rem)] my-2 sm:my-4">
 
         {/* Header - Full Width at Top */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-3 px-2 mb-4">
@@ -282,6 +293,15 @@ export default function RoutineEditorPage({ params }: PageProps) {
               className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-xl flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
+            </Button>
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileNavOpen(true)}
+              className="lg:hidden text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-xl flex-shrink-0"
+            >
+              <Menu className="h-5 w-5" />
             </Button>
             <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
             <Input
@@ -298,26 +318,26 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   variant="ghost"
                   size="icon"
                   onClick={handleSave}
-                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-8 w-8"
+                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-10 w-10 sm:h-8 sm:w-8"
                   title={t('button.save')}
                 >
-                  <Save className="h-4 w-4" />
+                  <Save className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsIntegrationOpen(true)}
-                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-8 w-8"
+                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg h-10 w-10 sm:h-8 sm:w-8"
                   title={t('button.settings')}
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
                 <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />
                 <Button
                   size="sm"
                   onClick={handleRun}
                   disabled={isExecuting || !routine.integration.enabled}
-                  className="gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md rounded-lg h-8 px-3 text-xs"
+                  className="gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-md rounded-lg h-10 sm:h-8 px-4 sm:px-3 text-sm sm:text-xs"
                 >
                   {isExecuting ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -456,6 +476,19 @@ export default function RoutineEditorPage({ params }: PageProps) {
                 )}
               </button>
               <button
+                onClick={() => setActiveTab('tasks')}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg flex items-center gap-1.5",
+                  activeTab === 'tasks'
+                    ? "bg-white/80 dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 z-10"
+                    : "bg-zinc-200/50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                <ListChecks className="h-3 w-3" />
+                Tasks
+                {tasks.length > 0 && <span className="bg-zinc-300 dark:bg-zinc-600 px-1.5 rounded-full text-[9px] min-w-[16px] text-center">{tasks.length}</span>}
+              </button>
+              <button
                 onClick={() => setActiveTab('integration')}
                 className={cn(
                   "px-4 py-2 text-xs font-medium transition-all relative rounded-t-lg flex items-center gap-1.5",
@@ -502,6 +535,15 @@ export default function RoutineEditorPage({ params }: PageProps) {
                   schedule={routine.schedule}
                   streakInfo={getStreakInfo(routine.id)}
                   onSave={handleScheduleSave}
+                />
+              </div>
+            )}
+            {activeTab === 'tasks' && (
+              <div className="p-8 h-full overflow-y-auto">
+                <TasksPanel
+                  tasks={tasks}
+                  onChange={handleTasksChange}
+                  locale={locale}
                 />
               </div>
             )}
@@ -588,6 +630,120 @@ export default function RoutineEditorPage({ params }: PageProps) {
             onUpdate={updateRoutine}
             onClose={() => setIsIntegrationOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {isMobileNavOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileNavOpen(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 lg:hidden"
+            />
+            {/* Drawer */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-zinc-900 z-50 lg:hidden shadow-2xl"
+            >
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                  <Folder className="h-5 w-5" />
+                  <span className="font-semibold">{t('editor.explorer')}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="h-8 w-8 rounded-lg"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              {/* Navigation */}
+              <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100%-60px)]">
+                {categories.map((category) => (
+                  <div key={category.id}>
+                    <button
+                      onClick={() => toggleCategoryExpanded(category.id)}
+                      className="w-full flex items-center gap-2 p-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors group"
+                    >
+                      {expandedCategories.has(category.id) ? (
+                        <ChevronDown className="w-4 h-4 shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 shrink-0" />
+                      )}
+                      <span className="opacity-70 group-hover:opacity-100">{iconMap[category.icon] || <Folder className="w-4 h-4" />}</span>
+                      <span className="font-medium truncate">{category.title}</span>
+                    </button>
+
+                    <AnimatePresence>
+                      {expandedCategories.has(category.id) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="ml-4 pl-4 border-l border-zinc-200 dark:border-zinc-800 space-y-1 overflow-hidden"
+                        >
+                          {getGoalsForCategory(category.id).map((goal) => (
+                            <div key={goal.id}>
+                              <button
+                                onClick={() => toggleGoalExpanded(goal.id)}
+                                className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors group"
+                              >
+                                {expandedGoals.has(goal.id) ? (
+                                  <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                                ) : (
+                                  <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                                )}
+                                <Target className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <span className="truncate">{goal.title}</span>
+                              </button>
+
+                              <AnimatePresence>
+                                {expandedGoals.has(goal.id) && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="ml-3 pl-3 border-l border-zinc-200 dark:border-zinc-800 space-y-1 overflow-hidden"
+                                  >
+                                    {getRoutinesForGoal(goal.id).map((r) => (
+                                      <Link
+                                        key={r.id}
+                                        href={`/routines/${r.id}`}
+                                        onClick={() => setIsMobileNavOpen(false)}
+                                        className={cn(
+                                          "block px-3 py-2 rounded-md text-sm truncate transition-all",
+                                          r.id === id
+                                            ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium"
+                                            : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                        )}
+                                      >
+                                        {r.title}
+                                      </Link>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </nav>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
