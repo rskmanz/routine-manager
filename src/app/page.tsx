@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Sparkles, MessageCircle, X, Send, FolderPlus, Target, ListChecks, Loader2, CheckCircle, XCircle, User, Check } from 'lucide-react'
+import { Plus, Sparkles, MessageCircle, X, Send, FolderPlus, Target, ListChecks, Loader2, CheckCircle, XCircle, User, Check, LogIn } from 'lucide-react'
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { useCategories, useGoals, useRoutines } from '@/hooks/useRoutines'
 import { useChat } from '@/hooks/useChat'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -62,6 +63,11 @@ export default function Home() {
   const [isAddRoutineOpen, setIsAddRoutineOpen] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
   const [layoutType, setLayoutType] = useState<LayoutType>('scroll')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Translation
   const { t, locale, changeLocale } = useTranslation()
@@ -88,11 +94,11 @@ export default function Home() {
     },
     toolHandlers: {
       onCreateCategory: async (args) => {
-        const cat = createCategory({ title: args.title, icon: args.icon || 'Folder' })
+        const cat = await createCategory({ title: args.title, icon: args.icon || 'Folder' })
         return { id: cat.id, title: cat.title }
       },
       onCreateGoal: async (args) => {
-        const goal = createGoal({
+        const goal = await createGoal({
           title: args.title,
           description: args.description || '',
           categoryId: args.categoryId,
@@ -102,7 +108,7 @@ export default function Home() {
         return { id: goal.id, title: goal.title }
       },
       onCreateRoutine: async (args) => {
-        const routine = createRoutine({
+        const routine = await createRoutine({
           title: args.title,
           goalId: args.goalId,
           blocks: [],
@@ -187,8 +193,8 @@ export default function Home() {
     setIsAddRoutineOpen(true)
   }
 
-  const handleCreateRoutine = (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newRoutine = createRoutine(routineData)
+  const handleCreateRoutine = async (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newRoutine = await createRoutine(routineData)
     router.push(`/routines/${newRoutine.id}`)
   }
 
@@ -232,6 +238,43 @@ export default function Home() {
             >
               {locale === 'en' ? '日本語' : 'EN'}
             </button>
+            {/* Login/User Button */}
+            {mounted && (
+              <>
+                <SignedIn>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'migrate' })
+                      })
+                      const data = await res.json()
+                      alert(`Migrated ${data.migrated} records. Refreshing...`)
+                      window.location.reload()
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-emerald-100 dark:bg-emerald-900 hover:bg-emerald-200 dark:hover:bg-emerald-800 text-emerald-700 dark:text-emerald-300 transition-colors"
+                  >
+                    Sync Data
+                  </button>
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: 'h-8 w-8',
+                      },
+                    }}
+                  />
+                </SignedIn>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors">
+                      <LogIn className="h-3.5 w-3.5" />
+                      <span>Login</span>
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-3 bg-white/40 dark:bg-zinc-800/40 p-1.5 rounded-2xl backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm ring-1 ring-black/5">

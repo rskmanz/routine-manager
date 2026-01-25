@@ -1,8 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LayoutList, CalendarCheck, FileEdit, Settings, User } from 'lucide-react'
+import { LayoutList, CalendarCheck, FileEdit, Settings, LogIn } from 'lucide-react'
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { useNavigation } from '@/contexts/NavigationContext'
 import type { ViewType } from '@/types'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,11 @@ const navItems: NavItem[] = [
 export function LeftSidebar() {
   const { currentView, navigateToView, selectedRoutineId } = useNavigation()
   const { t } = useTranslation()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <motion.aside
@@ -33,10 +39,29 @@ export function LeftSidebar() {
     >
       {/* User Icon */}
       <div className="mb-6">
-        <button className="flex flex-col items-center gap-1 p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-          <User className="h-5 w-5" />
-          <span className="text-[10px] font-medium">User</span>
-        </button>
+        {mounted ? (
+          <>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'h-10 w-10',
+                  },
+                }}
+              />
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="flex flex-col items-center gap-1 p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                  <LogIn className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Login</span>
+                </button>
+              </SignInButton>
+            </SignedOut>
+          </>
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+        )}
       </div>
 
       {/* Navigation Items */}
