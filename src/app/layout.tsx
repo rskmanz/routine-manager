@@ -19,13 +19,23 @@ export const metadata: Metadata = {
   description: 'AI-powered personal routine management with multi-executor automation',
 }
 
+function ConditionalClerkProvider({ children }: { children: React.ReactNode }) {
+  const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+  if (hasClerkKey) {
+    return <ClerkProvider>{children}</ClerkProvider>
+  }
+
+  return <>{children}</>
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
+    <ConditionalClerkProvider>
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
@@ -33,6 +43,6 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
         </body>
       </html>
-    </ClerkProvider>
+    </ConditionalClerkProvider>
   )
 }
