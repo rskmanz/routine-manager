@@ -1,13 +1,13 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Play, Pause, MoreHorizontal, Briefcase, User, Heart, Folder, ChevronRight,
   Book, Code, Music, Gamepad2, Plane, DollarSign, Home, Car, Dumbbell, Coffee,
   Camera, Palette, Lightbulb, Target, Star, Zap, Globe, Headphones, ShoppingBag,
   Utensils, GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame,
-  Edit2, Trash2
+  Edit2, Trash2, ChevronDown, Circle, CheckCircle2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -70,7 +70,22 @@ export function TableLayout({
   onDeleteCategory,
   onAddRoutine,
   onEditRoutine,
+  onTaskToggle,
 }: LayoutProps) {
+  const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (routineId: string) => {
+    setExpandedRoutines(prev => {
+      const next = new Set(prev)
+      if (next.has(routineId)) {
+        next.delete(routineId)
+      } else {
+        next.add(routineId)
+      }
+      return next
+    })
+  }
+
   const getGoalsForCategory = (categoryId: string) => {
     return goals.filter((g) => g.categoryId === categoryId)
   }
@@ -243,57 +258,111 @@ export function TableLayout({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/10 dark:divide-white/5">
-                            {getRoutinesForGoal(goal.id).map((routine, routineIndex) => (
-                              <motion.tr
-                                key={routine.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: goalIndex * 0.05 + routineIndex * 0.02 }}
-                                onClick={() => onEditRoutine(routine)}
-                                className="hover:bg-white/30 dark:hover:bg-white/5 cursor-pointer transition-colors group"
-                              >
-                                <td className="pl-14 pr-4 py-3">
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className={cn(
-                                        'w-2 h-2 rounded-full flex-shrink-0',
-                                        routine.status === 'active'
-                                          ? 'bg-emerald-400'
-                                          : 'bg-zinc-300 dark:bg-zinc-600'
-                                      )}
-                                    />
-                                    <span
-                                      className={cn(
-                                        'text-sm font-medium',
-                                        routine.status === 'paused'
-                                          ? 'text-zinc-400 line-through'
-                                          : 'text-zinc-700 dark:text-zinc-200'
-                                      )}
-                                    >
-                                      {routine.title}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span
-                                    className={cn(
-                                      'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium capitalize',
-                                      statusColors[routine.status]
-                                    )}
+                            {getRoutinesForGoal(goal.id).map((routine, routineIndex) => {
+                              const tasks = routine.tasks || []
+                              const completedCount = tasks.filter(t => t.completed).length
+                              const isExpanded = expandedRoutines.has(routine.id)
+
+                              return (
+                                <React.Fragment key={routine.id}>
+                                  <motion.tr
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: goalIndex * 0.05 + routineIndex * 0.02 }}
+                                    onClick={() => onEditRoutine(routine)}
+                                    className="hover:bg-white/30 dark:hover:bg-white/5 cursor-pointer transition-colors group"
                                   >
-                                    {routine.status}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 hidden sm:table-cell">
-                                  <span className="text-sm text-zinc-500 dark:text-zinc-400 capitalize">
-                                    {routine.integration?.executorType || 'None'}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-right">
-                                  <ChevronRight className="w-4 h-4 text-zinc-400 inline-block opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </td>
-                              </motion.tr>
-                            ))}
+                                    <td className="pl-14 pr-4 py-3">
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className={cn(
+                                            'w-2 h-2 rounded-full flex-shrink-0',
+                                            routine.status === 'active'
+                                              ? 'bg-emerald-400'
+                                              : 'bg-zinc-300 dark:bg-zinc-600'
+                                          )}
+                                        />
+                                        <span
+                                          className={cn(
+                                            'text-sm font-medium',
+                                            routine.status === 'paused'
+                                              ? 'text-zinc-400 line-through'
+                                              : 'text-zinc-700 dark:text-zinc-200'
+                                          )}
+                                        >
+                                          {routine.title}
+                                        </span>
+                                        {tasks.length > 0 && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              toggleExpand(routine.id)
+                                            }}
+                                            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2"
+                                          >
+                                            <span>{completedCount}/{tasks.length}</span>
+                                            <ChevronDown className={cn('w-3 h-3 transition-transform', isExpanded && 'rotate-180')} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <span
+                                        className={cn(
+                                          'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium capitalize',
+                                          statusColors[routine.status]
+                                        )}
+                                      >
+                                        {routine.status}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 hidden sm:table-cell">
+                                      <span className="text-sm text-zinc-500 dark:text-zinc-400 capitalize">
+                                        {routine.integration?.executorType || 'None'}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      <ChevronRight className="w-4 h-4 text-zinc-400 inline-block opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </td>
+                                  </motion.tr>
+
+                                  {/* Task Drilldown Row */}
+                                  <AnimatePresence>
+                                    {isExpanded && tasks.length > 0 && (
+                                      <motion.tr
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                      >
+                                        <td colSpan={4} className="pl-20 pr-4 py-2 bg-white/10 dark:bg-black/10">
+                                          <div className="space-y-1">
+                                            {tasks.map((task) => (
+                                              <button
+                                                key={task.id}
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  onTaskToggle?.(routine.id, task.id)
+                                                }}
+                                                className="flex items-center gap-2 text-sm w-full text-left hover:bg-white/30 dark:hover:bg-white/5 rounded px-2 py-1 transition-colors"
+                                              >
+                                                {task.completed ? (
+                                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                                ) : (
+                                                  <Circle className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                                                )}
+                                                <span className={cn('text-zinc-600 dark:text-zinc-300', task.completed && 'line-through text-zinc-400')}>
+                                                  {task.title}
+                                                </span>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </td>
+                                      </motion.tr>
+                                    )}
+                                  </AnimatePresence>
+                                </React.Fragment>
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>

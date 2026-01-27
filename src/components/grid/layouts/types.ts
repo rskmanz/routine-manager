@@ -13,4 +13,5 @@ export interface LayoutProps {
   onDeleteCategory: (id: string) => void
   onAddRoutine: (goalId: string) => void
   onEditRoutine: (routine: Routine) => void
+  onTaskToggle?: (routineId: string, taskId: string) => void
 }

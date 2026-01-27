@@ -290,6 +290,27 @@ export function useRoutines(goalId?: string) {
     return success
   }, [isSignedIn])
 
+  const toggleTask = useCallback(async (routineId: string, taskId: string) => {
+    const routine = routines.find(r => r.id === routineId)
+    if (!routine) return
+
+    const tasks = routine.tasks || []
+    const updatedTasks = tasks.map(t =>
+      t.id === taskId
+        ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : undefined }
+        : t
+    )
+
+    const updated = isSignedIn
+      ? await apiStorage.updateRoutine(routineId, { tasks: updatedTasks })
+      : localStorage.updateRoutine(routineId, { tasks: updatedTasks })
+
+    if (updated) {
+      setRoutines((prev) => prev.map((r) => (r.id === routineId ? updated : r)))
+    }
+    return updated
+  }, [routines, isSignedIn])
+
   return {
     routines,
     loading,
@@ -297,6 +318,7 @@ export function useRoutines(goalId?: string) {
     createRoutine,
     updateRoutine,
     deleteRoutine,
+    toggleTask,
   }
 }
 

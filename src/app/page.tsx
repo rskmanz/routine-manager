@@ -52,6 +52,7 @@ export default function Home() {
     createRoutine,
     updateRoutine,
     deleteRoutine,
+    toggleTask,
     loading: routinesLoading,
   } = useRoutines()
 
@@ -62,6 +63,7 @@ export default function Home() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
   const [isAddRoutineOpen, setIsAddRoutineOpen] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
   const [layoutType, setLayoutType] = useState<LayoutType>('scroll')
   const [mounted, setMounted] = useState(false)
 
@@ -194,12 +196,18 @@ export default function Home() {
   }
 
   const handleCreateRoutine = async (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newRoutine = await createRoutine(routineData)
-    router.push(`/routines/${newRoutine.id}`)
+    if (editingRoutine) {
+      await updateRoutine(editingRoutine.id, routineData)
+      setEditingRoutine(null)
+    } else {
+      await createRoutine(routineData)
+    }
   }
 
   const handleEditRoutine = (routine: Routine) => {
-    router.push(`/routines/${routine.id}`)
+    setEditingRoutine(routine)
+    setSelectedGoalId(routine.goalId)
+    setIsAddRoutineOpen(true)
   }
 
   const handleToggleRoutineStatus = (id: string) => {
@@ -338,6 +346,7 @@ export default function Home() {
                 onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
+                onTaskToggle={toggleTask}
               />
             )}
             {layoutType === 'grid' && (
@@ -352,6 +361,7 @@ export default function Home() {
                 onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
+                onTaskToggle={toggleTask}
               />
             )}
             {layoutType === 'table' && (
@@ -366,6 +376,7 @@ export default function Home() {
                 onDeleteCategory={handleDeleteCategory}
                 onAddRoutine={handleAddRoutine}
                 onEditRoutine={handleEditRoutine}
+                onTaskToggle={toggleTask}
               />
             )}
 
@@ -420,10 +431,14 @@ export default function Home() {
 
       <AddRoutineDialog
         open={isAddRoutineOpen}
-        onOpenChange={setIsAddRoutineOpen}
+        onOpenChange={(open) => {
+          setIsAddRoutineOpen(open)
+          if (!open) setEditingRoutine(null)
+        }}
         onSubmit={handleCreateRoutine}
         goalId={selectedGoalId}
         goals={goals}
+        editingRoutine={editingRoutine}
       />
 
       {/* Floating AI Chat Button */}

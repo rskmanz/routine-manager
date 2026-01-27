@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { MoreHorizontal, Play, Pause, Edit2, Trash2 } from 'lucide-react'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MoreHorizontal, Play, Pause, Edit2, Trash2, ChevronDown, Circle, CheckCircle2 } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Routine } from '@/types'
@@ -20,6 +20,7 @@ interface RoutineCardProps {
   onEdit: (routine: Routine) => void
   onDelete: (id: string) => void
   onToggleStatus: (id: string) => void
+  onTaskToggle?: (routineId: string, taskId: string) => void
 }
 
 const statusColors = {
@@ -33,7 +34,12 @@ export function RoutineCard({
   onEdit,
   onDelete,
   onToggleStatus,
+  onTaskToggle,
 }: RoutineCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const tasks = routine.tasks || []
+  const completedCount = tasks.filter(t => t.completed).length
+
   const {
     attributes,
     listeners,
@@ -139,6 +145,53 @@ export function RoutineCard({
               | {routine.integration.schedule}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Tasks drilldown */}
+      {tasks.length > 0 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsExpanded(!isExpanded)
+            }}
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
+          >
+            <ChevronDown className={cn('h-3 w-3 transition-transform', isExpanded && 'rotate-180')} />
+            <span>{completedCount}/{tasks.length} tasks</span>
+          </button>
+
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mt-2 space-y-1 overflow-hidden"
+              >
+                {tasks.map((task) => (
+                  <button
+                    key={task.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onTaskToggle?.(routine.id, task.id)
+                    }}
+                    className="flex items-center gap-2 text-sm w-full text-left hover:bg-accent rounded px-1 py-0.5 transition-colors"
+                  >
+                    {task.completed ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    )}
+                    <span className={cn(task.completed && 'line-through text-muted-foreground')}>
+                      {task.title}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </motion.div>

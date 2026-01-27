@@ -1,13 +1,13 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, MoreHorizontal, Play, Briefcase, User, Heart, Folder, Book, Code, Music,
   Gamepad2, Plane, DollarSign, Home, Car, Dumbbell, Coffee, Camera, Palette,
   Lightbulb, Target, Star, Zap, Globe, Headphones, ShoppingBag, Utensils,
   GraduationCap, Rocket, Award, Trophy, Sun, Moon, Mountain, Leaf, Flame,
-  Edit2, Trash2
+  Edit2, Trash2, ChevronDown, Circle, CheckCircle2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { LayoutProps } from './types'
@@ -63,7 +63,22 @@ export function HorizontalScrollLayout({
   onDeleteCategory,
   onAddRoutine,
   onEditRoutine,
+  onTaskToggle,
 }: LayoutProps) {
+  const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(new Set())
+
+  const toggleExpand = (routineId: string) => {
+    setExpandedRoutines(prev => {
+      const next = new Set(prev)
+      if (next.has(routineId)) {
+        next.delete(routineId)
+      } else {
+        next.add(routineId)
+      }
+      return next
+    })
+  }
+
   const getGoalsForCategory = (categoryId: string) => {
     return goals.filter((g) => g.categoryId === categoryId)
   }
@@ -176,33 +191,83 @@ export function HorizontalScrollLayout({
 
                     {/* Routines List */}
                     <div className="flex-1 space-y-3">
-                      {getRoutinesForGoal(goal.id).map((routine) => (
-                        <div
-                          key={routine.id}
-                          onClick={() => onEditRoutine(routine)}
-                          className="group/item flex items-center gap-3 p-3 rounded-xl bg-white/30 dark:bg-white/5 border border-white/30 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/10 transition-all cursor-pointer"
-                        >
-                          <div
-                            className={cn(
-                              'w-2 h-2 rounded-full',
-                              routine.status === 'active'
-                                ? 'bg-emerald-400'
-                                : 'bg-zinc-300 dark:bg-zinc-600'
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              'flex-1 text-sm font-medium transition-colors',
-                              routine.status === 'paused'
-                                ? 'text-zinc-400 line-through'
-                                : 'text-zinc-700 dark:text-zinc-200'
-                            )}
-                          >
-                            {routine.title}
-                          </span>
-                          <Play className="w-3 h-3 text-zinc-400 opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                        </div>
-                      ))}
+                      {getRoutinesForGoal(goal.id).map((routine) => {
+                        const tasks = routine.tasks || []
+                        const completedCount = tasks.filter(t => t.completed).length
+                        const isExpanded = expandedRoutines.has(routine.id)
+
+                        return (
+                          <div key={routine.id} className="space-y-1">
+                            <div
+                              onClick={() => onEditRoutine(routine)}
+                              className="group/item flex items-center gap-3 p-3 rounded-xl bg-white/30 dark:bg-white/5 border border-white/30 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/10 transition-all cursor-pointer"
+                            >
+                              <div
+                                className={cn(
+                                  'w-2 h-2 rounded-full',
+                                  routine.status === 'active'
+                                    ? 'bg-emerald-400'
+                                    : 'bg-zinc-300 dark:bg-zinc-600'
+                                )}
+                              />
+                              <span
+                                className={cn(
+                                  'flex-1 text-sm font-medium transition-colors',
+                                  routine.status === 'paused'
+                                    ? 'text-zinc-400 line-through'
+                                    : 'text-zinc-700 dark:text-zinc-200'
+                                )}
+                              >
+                                {routine.title}
+                              </span>
+                              {tasks.length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleExpand(routine.id)
+                                  }}
+                                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                >
+                                  <span>{completedCount}/{tasks.length}</span>
+                                  <ChevronDown className={cn('w-3 h-3 transition-transform', isExpanded && 'rotate-180')} />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Task Drilldown */}
+                            <AnimatePresence>
+                              {isExpanded && tasks.length > 0 && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="ml-5 pl-3 border-l-2 border-white/20 dark:border-white/10 space-y-1 overflow-hidden"
+                                >
+                                  {tasks.map((task) => (
+                                    <button
+                                      key={task.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        onTaskToggle?.(routine.id, task.id)
+                                      }}
+                                      className="flex items-center gap-2 text-sm w-full text-left hover:bg-white/30 dark:hover:bg-white/5 rounded px-2 py-1 transition-colors"
+                                    >
+                                      {task.completed ? (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                      ) : (
+                                        <Circle className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                                      )}
+                                      <span className={cn('text-zinc-600 dark:text-zinc-300', task.completed && 'line-through text-zinc-400')}>
+                                        {task.title}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )
+                      })}
                     </div>
 
                     {/* Add Button */}
