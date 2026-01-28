@@ -18,7 +18,6 @@ interface AddRoutineDialogProps {
   onSubmit: (routine: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => void
   goalId: string
   goals: Goal[]
-  editingRoutine?: Routine | null
 }
 
 export function AddRoutineDialog({
@@ -27,19 +26,13 @@ export function AddRoutineDialog({
   onSubmit,
   goalId,
   goals,
-  editingRoutine,
 }: AddRoutineDialogProps) {
   const [title, setTitle] = useState('')
   const [selectedGoalId, setSelectedGoalId] = useState(goalId)
 
   useEffect(() => {
-    if (editingRoutine) {
-      setTitle(editingRoutine.title)
-      setSelectedGoalId(editingRoutine.goalId)
-    } else {
-      setSelectedGoalId(goalId)
-    }
-  }, [goalId, editingRoutine])
+    setSelectedGoalId(goalId)
+  }, [goalId])
 
   useEffect(() => {
     if (!open) {
@@ -51,37 +44,27 @@ export function AddRoutineDialog({
     e.preventDefault()
     if (!title.trim()) return
 
-    if (editingRoutine) {
-      onSubmit({
-        ...editingRoutine,
-        title: title.trim(),
-        goalId: selectedGoalId,
-      })
-    } else {
-      onSubmit({
-        title: title.trim(),
-        goalId: selectedGoalId,
-        blocks: [],
-        integration: {
-          executorType: 'code-plugin',
-          enabled: false,
-          config: {},
-        },
-        status: 'draft',
-      })
-    }
+    onSubmit({
+      title: title.trim(),
+      goalId: selectedGoalId,
+      blocks: [],
+      integration: {
+        executorType: 'code-plugin',
+        enabled: false,
+        config: {},
+      },
+      status: 'draft',
+    })
 
     onOpenChange(false)
   }
-
-  const isEditing = !!editingRoutine
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Routine' : 'Create New Routine'}</DialogTitle>
+            <DialogTitle>Create New Routine</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -124,7 +107,7 @@ export function AddRoutineDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={!title.trim()}>
-              {isEditing ? 'Save Changes' : 'Create Routine'}
+              Create Routine
             </Button>
           </DialogFooter>
         </form>

@@ -63,7 +63,6 @@ export default function Home() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
   const [isAddRoutineOpen, setIsAddRoutineOpen] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
-  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
   const [layoutType, setLayoutType] = useState<LayoutType>('scroll')
   const [mounted, setMounted] = useState(false)
 
@@ -196,18 +195,11 @@ export default function Home() {
   }
 
   const handleCreateRoutine = async (routineData: Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingRoutine) {
-      await updateRoutine(editingRoutine.id, routineData)
-      setEditingRoutine(null)
-    } else {
-      await createRoutine(routineData)
-    }
+    await createRoutine(routineData)
   }
 
   const handleEditRoutine = (routine: Routine) => {
-    setEditingRoutine(routine)
-    setSelectedGoalId(routine.goalId)
-    setIsAddRoutineOpen(true)
+    router.push(`/routines/${routine.id}`)
   }
 
   const handleToggleRoutineStatus = (id: string) => {
@@ -431,14 +423,10 @@ export default function Home() {
 
       <AddRoutineDialog
         open={isAddRoutineOpen}
-        onOpenChange={(open) => {
-          setIsAddRoutineOpen(open)
-          if (!open) setEditingRoutine(null)
-        }}
+        onOpenChange={setIsAddRoutineOpen}
         onSubmit={handleCreateRoutine}
         goalId={selectedGoalId}
         goals={goals}
-        editingRoutine={editingRoutine}
       />
 
       {/* Floating AI Chat Button */}
