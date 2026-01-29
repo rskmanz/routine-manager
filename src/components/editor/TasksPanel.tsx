@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Check, X, CheckCircle2, Circle } from 'lucide-react'
+import { Plus, Check, X, CheckCircle2, Circle, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { RoutineTask } from '@/types'
@@ -17,6 +17,7 @@ interface TasksPanelProps {
 
 export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const t = (key: string) => {
     const translations: Record<string, Record<string, string>> = {
@@ -27,6 +28,9 @@ export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) 
         'tasks.empty': 'No tasks yet',
         'tasks.emptyDesc': 'Add tasks to track what needs to be done for this routine.',
         'tasks.completed': 'completed',
+        'tasks.showCompleted': 'Show completed',
+        'tasks.hideCompleted': 'Hide completed',
+        'tasks.noOpenTasks': 'All tasks completed!',
       },
       ja: {
         'tasks.title': 'タスク',
@@ -35,6 +39,9 @@ export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) 
         'tasks.empty': 'タスクがありません',
         'tasks.emptyDesc': 'このルーティンで行うべきタスクを追加してください。',
         'tasks.completed': '完了',
+        'tasks.showCompleted': '完了を表示',
+        'tasks.hideCompleted': '完了を非表示',
+        'tasks.noOpenTasks': '全タスク完了！',
       },
     }
     return translations[locale]?.[key] || translations.en[key] || key
@@ -81,17 +88,35 @@ export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) 
 
   const completedCount = tasks.filter((t) => t.completed).length
   const totalCount = tasks.length
+  const openTasks = tasks.filter((t) => !t.completed)
+  const completedTasks = tasks.filter((t) => t.completed)
+  const visibleTasks = showCompleted ? tasks : openTasks
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground">{t('tasks.title')}</h3>
-        {totalCount > 0 && (
-          <span className="text-xs text-muted-foreground">
-            {completedCount}/{totalCount} {t('tasks.completed')}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {completedCount > 0 && (
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showCompleted ? (
+                <EyeOff className="h-3.5 w-3.5" />
+              ) : (
+                <Eye className="h-3.5 w-3.5" />
+              )}
+              {showCompleted ? t('tasks.hideCompleted') : t('tasks.showCompleted')} ({completedCount})
+            </button>
+          )}
+          {totalCount > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {completedCount}/{totalCount} {t('tasks.completed')}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
@@ -109,7 +134,7 @@ export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) 
       {/* Task list */}
       <div className="space-y-1">
         <AnimatePresence mode="popLayout">
-          {tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <motion.div
               key={task.id}
               initial={{ opacity: 0, y: -10 }}
@@ -154,6 +179,13 @@ export function TasksPanel({ tasks, onChange, locale = 'en' }: TasksPanelProps) 
           <div className="text-center py-8 px-4 rounded-lg border-2 border-dashed border-muted-foreground/20">
             <p className="text-sm text-muted-foreground mb-1">{t('tasks.empty')}</p>
             <p className="text-xs text-muted-foreground/70">{t('tasks.emptyDesc')}</p>
+          </div>
+        )}
+
+        {/* All tasks completed state */}
+        {tasks.length > 0 && visibleTasks.length === 0 && !showCompleted && (
+          <div className="text-center py-4 px-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">{t('tasks.noOpenTasks')}</p>
           </div>
         )}
       </div>

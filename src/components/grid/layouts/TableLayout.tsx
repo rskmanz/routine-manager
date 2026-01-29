@@ -259,8 +259,8 @@ export function TableLayout({
                           </thead>
                           <tbody className="divide-y divide-white/10 dark:divide-white/5">
                             {getRoutinesForGoal(goal.id).map((routine, routineIndex) => {
-                              const tasks = routine.tasks || []
-                              const completedCount = tasks.filter(t => t.completed).length
+                              const allTasks = routine.tasks || []
+                              const openTasks = allTasks.filter(t => !t.completed)
                               const isExpanded = expandedRoutines.has(routine.id)
 
                               return (
@@ -292,7 +292,7 @@ export function TableLayout({
                                         >
                                           {routine.title}
                                         </span>
-                                        {tasks.length > 0 && (
+                                        {openTasks.length > 0 && (
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation()
@@ -300,7 +300,7 @@ export function TableLayout({
                                             }}
                                             className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 px-3 py-2 -my-2 rounded-lg hover:bg-white/30 dark:hover:bg-white/10"
                                           >
-                                            <span>{completedCount}/{tasks.length}</span>
+                                            <span>{openTasks.length}</span>
                                             <ChevronDown className={cn('w-3 h-3 transition-transform', isExpanded && 'rotate-180')} />
                                           </button>
                                         )}
@@ -326,9 +326,9 @@ export function TableLayout({
                                     </td>
                                   </motion.tr>
 
-                                  {/* Task Drilldown Row */}
+                                  {/* Task Drilldown Row - only open tasks */}
                                   <AnimatePresence>
-                                    {isExpanded && tasks.length > 0 && (
+                                    {isExpanded && openTasks.length > 0 && (
                                       <motion.tr
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -336,7 +336,7 @@ export function TableLayout({
                                       >
                                         <td colSpan={4} className="pl-20 pr-4 py-2 bg-white/10 dark:bg-black/10">
                                           <div className="space-y-1">
-                                            {tasks.map((task) => (
+                                            {openTasks.map((task) => (
                                               <button
                                                 key={task.id}
                                                 onClick={(e) => {
@@ -345,12 +345,8 @@ export function TableLayout({
                                                 }}
                                                 className="flex items-center gap-2 text-sm w-full text-left hover:bg-white/30 dark:hover:bg-white/5 rounded px-2 py-1 transition-colors"
                                               >
-                                                {task.completed ? (
-                                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                                                ) : (
-                                                  <Circle className="h-4 w-4 text-zinc-400 flex-shrink-0" />
-                                                )}
-                                                <span className={cn('text-zinc-600 dark:text-zinc-300', task.completed && 'line-through text-zinc-400')}>
+                                                <Circle className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                                                <span className="text-zinc-600 dark:text-zinc-300">
                                                   {task.title}
                                                 </span>
                                               </button>

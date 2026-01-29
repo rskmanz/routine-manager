@@ -295,11 +295,23 @@ export function useRoutines(goalId?: string) {
     if (!routine) return
 
     const tasks = routine.tasks || []
-    const updatedTasks = tasks.map(t =>
-      t.id === taskId
-        ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : undefined }
-        : t
-    )
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+
+    // Toggle the task and clean up old completed tasks (older than 1 week)
+    const updatedTasks = tasks
+      .map(t =>
+        t.id === taskId
+          ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : undefined }
+          : t
+      )
+      .filter(t => {
+        // Keep all open tasks
+        if (!t.completed) return true
+        // Keep completed tasks without completedAt (edge case)
+        if (!t.completedAt) return true
+        // Keep completed tasks from the last week
+        return new Date(t.completedAt).getTime() > oneWeekAgo
+      })
 
     const updated = isSignedIn
       ? await apiStorage.updateRoutine(routineId, { tasks: updatedTasks })
