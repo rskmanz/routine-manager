@@ -298,7 +298,7 @@ export function TableLayout({
                                               e.stopPropagation()
                                               toggleExpand(routine.id)
                                             }}
-                                            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2"
+                                            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 ml-2 px-3 py-2 -my-2 rounded-lg hover:bg-white/30 dark:hover:bg-white/10"
                                           >
                                             <span>{completedCount}/{tasks.length}</span>
                                             <ChevronDown className={cn('w-3 h-3 transition-transform', isExpanded && 'rotate-180')} />
